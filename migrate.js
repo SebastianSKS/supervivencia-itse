@@ -1,0 +1,107 @@
+// migrate.js — Script de migración para Supervivencia ITSE
+// Uso: node migrate.js
+//
+// Antes de correr: asegúrate de tener TURSO_AUTH_TOKEN en tu .env.local
+
+const { createClient } = require('@libsql/client');
+const { config }       = require('dotenv');
+const path             = require('path');
+
+// Carga .env.local desde la raíz del proyecto
+config({ path: path.resolve(__dirname, '.env.local') });
+
+const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = process.env;
+
+// ── Validación de variables ───────────────────────────────────────────────────
+if (!TURSO_DATABASE_URL) {
+  console.error('❌  Falta TURSO_DATABASE_URL en .env.local');
+  process.exit(1);
+}
+if (!TURSO_AUTH_TOKEN) {
+  console.error('❌  Falta TURSO_AUTH_TOKEN en .env.local');
+  console.error('    Genera uno con: turso db tokens create error-404-sebastiansks');
+  process.exit(1);
+}
+
+// ── Cliente Turso ─────────────────────────────────────────────────────────────
+const db = createClient({
+  url:       TURSO_DATABASE_URL,
+  authToken: TURSO_AUTH_TOKEN,
+});
+
+// ── Sentencias SQL ────────────────────────────────────────────────────────────
+const migrations = [
+  {
+    name: 'users',
+    sql: `
+      CREATE TABLE IF NOT EXISTS users (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        username      TEXT    NOT NULL UNIQUE,
+        email         TEXT    NOT NULL UNIQUE,
+        password_hash TEXT    NOT NULL,
+        role          TEXT    NOT NULL DEFAULT 'user'
+                              CHECK (role IN ('user', 'admin')),
+        created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+      )
+    `,
+  },
+  {
+    name: 'posts',
+    sql: `
+      CREATE TABLE IF NOT EXISTS posts (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL
+                   REFERENCES users(id) ON DELETE CASCADE,
+        title      TEXT    NOT NULL,
+        content    TEXT    NOT NULL,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+      )
+    `,
+  },
+  {
+    name: 'likes',
+    sql: `
+      CREATE TABLE IF NOT EXISTS likes (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id    INTEGER NOT NULL
+                   REFERENCES posts(id) ON DELETE CASCADE,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+      )
+    `,
+  },
+  {
+    name: 'index: posts.user_id',
+    sql: `CREATE INDEX IF NOT EXISTS idx_posts_user_id   ON posts(user_id)`,
+  },
+  {
+    name: 'index: posts.created_at',
+    sql: `CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at)`,
+  },
+  {
+    name: 'index: likes.post_id',
+    sql: `CREATE INDEX IF NOT EXISTS idx_likes_post_id   ON likes(post_id)`,
+  },
+];
+
+// ── Runner ────────────────────────────────────────────────────────────────────
+async function migrate() {
+  console.log('\n🚀  Conectando a Turso...');
+  console.log('    URL:', TURSO_DATABASE_URL, '\n');
+
+  for (const { name, sql } of migrations) {
+    try {
+      await db.execute(sql);
+      console.log(`✅  ${name}`);
+    } catch (err) {
+      console.error(`❌  Error en "${name}":`, err.message);
+      db.close();
+      process.exit(1);
+    }
+  }
+
+  console.log('\n🎉  ¡Migración completada! Tablas listas en Turso.');
+  console.log('    users  →  posts  →  likes\n');
+  db.close();
+}
+
+migrate();

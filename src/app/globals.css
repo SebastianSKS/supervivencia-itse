@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+/* ─── Paleta Cyberpunk / Glassmorphism ──────────────────────────────────────── */
+:root {
+  --bg-base:        #0a0a0f;
+  --bg-surface:     #0d0d18;
+  --bg-elevated:    #12121f;
+
+  --cyan:           #00f5ff;
+  --cyan-dim:       rgba(0, 245, 255, 0.15);
+  --cyan-border:    rgba(0, 245, 255, 0.25);
+  --cyan-glow:      0 0 20px rgba(0, 245, 255, 0.35);
+
+  --purple:         #bf00ff;
+  --purple-dim:     rgba(191, 0, 255, 0.15);
+  --purple-border:  rgba(191, 0, 255, 0.25);
+  --purple-glow:    0 0 20px rgba(191, 0, 255, 0.35);
+
+  --pink:           #ff006e;
+  --pink-dim:       rgba(255, 0, 110, 0.15);
+
+  --text-primary:   #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted:     #475569;
+
+  --glass-bg:       rgba(255, 255, 255, 0.04);
+  --glass-border:   rgba(255, 255, 255, 0.08);
+  --glass-hover:    rgba(255, 255, 255, 0.07);
+}
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Fondo animado con gradiente cósmico ───────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 245, 255, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(191, 0, 255, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255, 0, 110, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ─── Scrollbar personalizado ───────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cyan-border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyan);
+}
+
+/* ─── Glassmorphism card ────────────────────────────────────────────────────── */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  background: var(--glass-hover);
+  border-color: var(--cyan-border);
+  box-shadow: var(--cyan-glow);
+}
+
+/* ─── Cyan neon button ──────────────────────────────────────────────────────── */
+.btn-neon {
+  background: linear-gradient(135deg, var(--cyan-dim), transparent);
+  border: 1px solid var(--cyan-border);
+  color: var(--cyan);
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-neon:hover {
+  background: var(--cyan-dim);
+  box-shadow: var(--cyan-glow);
+  transform: translateY(-1px);
+}
+
+/* ─── Purple neon button ────────────────────────────────────────────────────── */
+.btn-purple {
+  background: linear-gradient(135deg, var(--purple-dim), transparent);
+  border: 1px solid var(--purple-border);
+  color: var(--purple);
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-purple:hover {
+  background: var(--purple-dim);
+  box-shadow: var(--purple-glow);
+  transform: translateY(-1px);
+}
+
+/* ─── Neon text ─────────────────────────────────────────────────────────────── */
+.text-neon-cyan {
+  color: var(--cyan);
+  text-shadow: 0 0 12px rgba(0, 245, 255, 0.6);
+}
+
+.text-neon-purple {
+  color: var(--purple);
+  text-shadow: 0 0 12px rgba(191, 0, 255, 0.6);
+}
+
+.text-neon-pink {
+  color: var(--pink);
+  text-shadow: 0 0 12px rgba(255, 0, 110, 0.6);
+}
+
+/* ─── Input glassmorphism ───────────────────────────────────────────────────── */
+.input-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  /* Padding: top/bottom fijo, derecha fija. Izquierda la controla Tailwind (pl-4, pl-10, etc.) */
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-right: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  font-family: inherit;
+  backdrop-filter: blur(8px);
+}
+
+.input-glass::placeholder {
+  color: var(--text-muted);
+}
+
+.input-glass:focus {
+  border-color: var(--cyan-border);
+  box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.1);
+}
+
+/* ─── Badge ─────────────────────────────────────────────────────────────────── */
+.badge-cyan {
+  background: var(--cyan-dim);
+  border: 1px solid var(--cyan-border);
+  color: var(--cyan);
+  border-radius: 999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.badge-purple {
+  background: var(--purple-dim);
+  border: 1px solid var(--purple-border);
+  color: var(--purple);
+  border-radius: 999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ─── Divider neon ──────────────────────────────────────────────────────────── */
+.divider-neon {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--cyan-border), transparent);
+  border: none;
+}
+
+/* ─── Animaciones ───────────────────────────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+@keyframes float-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+.animate-float-up {
+  animation: float-up 0.4s ease-out both;
+}
+
+/* ─── Dark Mode Autofill Override ───────────────────────────────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #f4f4f5 !important;
+  caret-color: #f4f4f5 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #18181b inset !important;
+  box-shadow: 0 0 0px 1000px #18181b inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+  font-family: inherit;
+}
+
