@@ -65,7 +65,10 @@ const migrations = [
         id         INTEGER PRIMARY KEY AUTOINCREMENT,
         post_id    INTEGER NOT NULL
                    REFERENCES posts(id) ON DELETE CASCADE,
-        created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+        user_id    INTEGER NOT NULL
+                   REFERENCES users(id) ON DELETE CASCADE,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(post_id, user_id)
       )
     `,
   },

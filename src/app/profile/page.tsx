@@ -143,7 +143,7 @@ export default async function ProfilePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {myPosts.map(post => (
-                <MyPostCard key={post.id} post={post} />
+                <MyPostCard key={post.id} post={post} currentUserId={session.userId} />
               ))}
             </div>
           )}

@@ -7,13 +7,14 @@ import type { Post } from '@/actions/posts';
 
 interface Props {
   post: Post;
+  currentUserId?: number | null;
 }
 
 /**
  * Variante de PostCard para /profile.
  * Incluye botón de eliminar con validación de ownership en el servidor y badge de rango.
  */
-export default function MyPostCard({ post }: Props) {
+export default function MyPostCard({ post, currentUserId = null }: Props) {
   const initial = post.username.charAt(0).toUpperCase();
 
   return (
@@ -34,7 +35,7 @@ export default function MyPostCard({ post }: Props) {
           </div>
         </div>
 
-        {/* Likes inline en el header (vista compacta) */}
+        {/* Likes en el header */}
         <div className="flex items-center gap-1 text-zinc-600 text-xs">
           <Heart className="w-3.5 h-3.5 text-red-500/50" />
           {post.like_count}
@@ -53,7 +54,13 @@ export default function MyPostCard({ post }: Props) {
 
       {/* Footer: like + eliminar */}
       <div className="pt-1 border-t border-white/[0.04] flex items-center justify-between">
-        <LikeButton postId={post.id} initialCount={post.like_count} />
+        <LikeButton
+          postId={post.id}
+          initialCount={post.like_count}
+          initialLiked={post.has_liked}
+          authorId={post.user_id}
+          currentUserId={currentUserId}
+        />
 
         {/* Botón eliminar — valida ownership en el servidor */}
         <form action={deleteMyPost.bind(null, post.id)}>

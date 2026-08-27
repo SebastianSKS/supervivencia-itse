@@ -5,9 +5,10 @@ import type { Post } from '@/actions/posts';
 
 interface Props {
   post: Post;
+  currentUserId?: number | null;
 }
 
-export default function PostCard({ post }: Props) {
+export default function PostCard({ post, currentUserId = null }: Props) {
   const initial = post.username.charAt(0).toUpperCase();
 
   return (
@@ -39,9 +40,15 @@ export default function PostCard({ post }: Props) {
         </p>
       </div>
 
-      {/* Footer: like button */}
+      {/* Footer: like button con toggle y estado de usuario */}
       <div className="pt-1 border-t border-white/[0.04] flex items-center">
-        <LikeButton postId={post.id} initialCount={post.like_count} />
+        <LikeButton
+          postId={post.id}
+          initialCount={post.like_count}
+          initialLiked={post.has_liked}
+          authorId={post.user_id}
+          currentUserId={currentUserId}
+        />
       </div>
 
     </article>

@@ -18,11 +18,12 @@ export type Post = {
   author_posts: number;
   author_likes: number;
   author_rank: UserRank;
+  has_liked: boolean;
 };
 
 export type CreatePostState = { error?: string; success?: boolean } | null;
 
-// ─── Helper: mapear fila de BD → Post con Rango ───────────────────────────────
+// ─── Helper: mapear fila de BD → Post con Rango y Estado de Like ───────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToPost(row: any): Post {
   const authorPosts = Number(row.author_posts || 0);
@@ -39,39 +40,48 @@ function rowToPost(row: any): Post {
     author_posts: authorPosts,
     author_likes: authorLikes,
     author_rank:  getUserRank(authorPosts, authorLikes),
+    has_liked:    Boolean(row.has_liked === 1 || row.has_liked === true),
   };
 }
 
-// ─── Todos los posts (El Muro) con rango y estadísticas de autor ──────────────
+// ─── Todos los posts (El Muro) ────────────────────────────────────────────────
 export async function getPosts(): Promise<Post[]> {
-  const result = await db.execute(`
-    WITH user_stats AS (
+  const session = await getSession();
+  const currentUserId = session?.userId ?? -1;
+
+  const result = await db.execute({
+    sql: `
+      WITH user_stats AS (
+        SELECT
+          u.id AS user_id,
+          COUNT(DISTINCT p_sub.id) AS total_posts,
+          COUNT(l_sub.id)          AS total_likes
+        FROM users u
+        LEFT JOIN posts p_sub ON u.id = p_sub.user_id
+        LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
+        GROUP BY u.id
+      )
       SELECT
-        u.id AS user_id,
-        COUNT(DISTINCT p_sub.id) AS total_posts,
-        COUNT(l_sub.id)          AS total_likes
-      FROM users u
-      LEFT JOIN posts p_sub ON u.id = p_sub.user_id
-      LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
-      GROUP BY u.id
-    )
-    SELECT
-      p.id,
-      p.title,
-      p.content,
-      p.created_at,
-      p.user_id,
-      COALESCE(u.username, 'Usuario eliminado') AS username,
-      COUNT(DISTINCT l.id)                     AS like_count,
-      COALESCE(s.total_posts, 0)               AS author_posts,
-      COALESCE(s.total_likes, 0)               AS author_likes
-    FROM posts p
-    LEFT JOIN users u      ON p.user_id = u.id
-    LEFT JOIN likes l      ON p.id = l.post_id
-    LEFT JOIN user_stats s ON p.user_id = s.user_id
-    GROUP BY p.id
-    ORDER BY p.created_at DESC
-  `);
+        p.id,
+        p.title,
+        p.content,
+        p.created_at,
+        p.user_id,
+        COALESCE(u.username, 'Usuario eliminado') AS username,
+        COUNT(DISTINCT l.id)                     AS like_count,
+        COALESCE(s.total_posts, 0)               AS author_posts,
+        COALESCE(s.total_likes, 0)               AS author_likes,
+        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked
+      FROM posts p
+      LEFT JOIN users u      ON p.user_id = u.id
+      LEFT JOIN likes l      ON p.id = l.post_id
+      LEFT JOIN user_stats s ON p.user_id = s.user_id
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+    `,
+    args: [currentUserId],
+  });
+
   return result.rows.map(rowToPost);
 }
 
@@ -98,7 +108,8 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
         COALESCE(u.username, 'Usuario eliminado') AS username,
         COUNT(DISTINCT l.id)                     AS like_count,
         COALESCE(s.total_posts, 0)               AS author_posts,
-        COALESCE(s.total_likes, 0)               AS author_likes
+        COALESCE(s.total_likes, 0)               AS author_likes,
+        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked
       FROM posts p
       LEFT JOIN users u      ON p.user_id = u.id
       LEFT JOIN likes l      ON p.id = l.post_id
@@ -107,8 +118,9 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
       GROUP BY p.id
       ORDER BY p.created_at DESC
     `,
-    args: [userId],
+    args: [userId, userId],
   });
+
   return result.rows.map(rowToPost);
 }
 
