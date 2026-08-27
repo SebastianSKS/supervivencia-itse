@@ -1,6 +1,7 @@
 import { formatDate } from '@/lib/utils';
 import { deleteMyPost } from '@/actions/user';
 import LikeButton from './LikeButton';
+import RankBadge from './RankBadge';
 import { Trash2, Heart } from 'lucide-react';
 import type { Post } from '@/actions/posts';
 
@@ -10,7 +11,7 @@ interface Props {
 
 /**
  * Variante de PostCard para /profile.
- * Incluye botón de eliminar con validación de ownership en el servidor.
+ * Incluye botón de eliminar con validación de ownership en el servidor y badge de rango.
  */
 export default function MyPostCard({ post }: Props) {
   const initial = post.username.charAt(0).toUpperCase();
@@ -25,8 +26,11 @@ export default function MyPostCard({ post }: Props) {
             {initial}
           </div>
           <div className="leading-none">
-            <p className="text-zinc-200 text-sm font-medium">@{post.username}</p>
-            <p className="text-zinc-600 text-xs mt-0.5">{formatDate(post.created_at)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-zinc-200 text-sm font-medium">@{post.username}</p>
+              <RankBadge rank={post.author_rank} size="sm" />
+            </div>
+            <p className="text-zinc-600 text-xs mt-1">{formatDate(post.created_at)}</p>
           </div>
         </div>
 
@@ -55,7 +59,7 @@ export default function MyPostCard({ post }: Props) {
         <form action={deleteMyPost.bind(null, post.id)}>
           <button
             type="submit"
-            className="flex items-center gap-1.5 text-xs text-red-500/50 hover:text-red-400 hover:bg-red-400/10 px-2.5 py-1.5 rounded-lg transition-all duration-150"
+            className="flex items-center gap-1.5 text-xs text-red-500/50 hover:text-red-400 hover:bg-red-400/10 px-2.5 py-1.5 rounded-lg transition-all duration-150 cursor-pointer"
             aria-label="Eliminar este consejo"
           >
             <Trash2 className="w-3.5 h-3.5" />

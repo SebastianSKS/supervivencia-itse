@@ -1,11 +1,12 @@
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { logout } from '@/actions/auth';
-import { getMyPosts } from '@/actions/posts';
+import { getMyPosts, getUserStats } from '@/actions/posts';
 import UpdateUsernameForm from './UpdateUsernameForm';
 import MyPostCard from '@/components/MyPostCard';
 import Navbar from '@/components/Navbar';
-import { User, Shield, Calendar, LogOut, Crown, LayoutGrid, PenSquare } from 'lucide-react';
+import RankBadge from '@/components/RankBadge';
+import { User, Shield, Calendar, LogOut, Crown, LayoutGrid, PenSquare, Heart, Award } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,11 @@ export default async function ProfilePage() {
   const session = await getSession();
   if (!session) redirect('/login');
 
-  const [myPosts] = await Promise.all([getMyPosts(session.userId)]);
+  const [myPosts, userStats] = await Promise.all([
+    getMyPosts(session.userId),
+    getUserStats(session.userId),
+  ]);
+
   const isAdmin = session.role === 'admin';
 
   return (
@@ -46,26 +51,32 @@ export default async function ProfilePage() {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-3">
+              <div className="flex items-center gap-2.5 flex-wrap mb-3">
                 <h2 className="text-xl font-bold text-zinc-100">@{session.username}</h2>
-                {isAdmin ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                <RankBadge rank={userStats.rank} size="md" />
+                {isAdmin && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full text-amber-400 bg-amber-400/10 border border-amber-400/20">
                     <Crown className="w-3 h-3" /> Admin
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-zinc-400 bg-zinc-800 border border-white/[0.06]">
-                    <User className="w-3 h-3" /> Veterano
                   </span>
                 )}
               </div>
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-2 text-sm text-zinc-400">
-                  <User className="w-3.5 h-3.5 text-zinc-600" />
-                  {session.email}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                  <User className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                  <span className="truncate">{session.email}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-600" />
-                  {myPosts.length} {myPosts.length === 1 ? 'consejo publicado' : 'consejos publicados'}
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                  <Calendar className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                  <span>{userStats.totalPosts} {userStats.totalPosts === 1 ? 'consejo publicado' : 'consejos publicados'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                  <Heart className="w-3.5 h-3.5 text-red-500/60 shrink-0" />
+                  <span>{userStats.totalLikes} {userStats.totalLikes === 1 ? 'like recibido' : 'likes recibidos'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                  <Award className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                  <span>Nivel: <strong className="text-zinc-200">{userStats.rank}</strong></span>
                 </div>
               </div>
             </div>
@@ -88,7 +99,7 @@ export default async function ProfilePage() {
           <form action={logout}>
             <button
               type="submit"
-              className="flex items-center gap-2 text-sm font-medium text-red-500/70 hover:text-red-400 bg-red-400/5 hover:bg-red-400/10 border border-red-400/10 hover:border-red-400/20 px-4 py-2.5 rounded-xl transition-all"
+              className="flex items-center gap-2 text-sm font-medium text-red-500/70 hover:text-red-400 bg-red-400/5 hover:bg-red-400/10 border border-red-400/10 hover:border-red-400/20 px-4 py-2.5 rounded-xl transition-all cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Cerrar sesión

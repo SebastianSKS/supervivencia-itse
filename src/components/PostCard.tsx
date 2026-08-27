@@ -1,5 +1,6 @@
 import { formatDate } from '@/lib/utils';
 import LikeButton from './LikeButton';
+import RankBadge from './RankBadge';
 import type { Post } from '@/actions/posts';
 
 interface Props {
@@ -12,15 +13,18 @@ export default function PostCard({ post }: Props) {
   return (
     <article className="group flex flex-col gap-4 bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-5 hover:bg-zinc-800/40 hover:border-white/10 transition-all duration-200">
 
-      {/* Header: avatar + autor + fecha */}
+      {/* Header: avatar + autor + rango + fecha */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/[0.08] flex items-center justify-center text-zinc-300 text-sm font-semibold shrink-0 select-none">
             {initial}
           </div>
           <div className="leading-none">
-            <p className="text-zinc-200 text-sm font-medium">@{post.username}</p>
-            <p className="text-zinc-600 text-xs mt-0.5">{formatDate(post.created_at)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-zinc-200 text-sm font-medium">@{post.username}</p>
+              <RankBadge rank={post.author_rank} size="sm" />
+            </div>
+            <p className="text-zinc-600 text-xs mt-1">{formatDate(post.created_at)}</p>
           </div>
         </div>
       </div>

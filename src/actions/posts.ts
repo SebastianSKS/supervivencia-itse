@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { getUserRank, UserRank } from '@/lib/ranks';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -14,34 +15,60 @@ export type Post = {
   user_id: number;
   username: string;
   like_count: number;
+  author_posts: number;
+  author_likes: number;
+  author_rank: UserRank;
 };
 
 export type CreatePostState = { error?: string; success?: boolean } | null;
 
-// ─── Helper: mapear fila de BD → Post ────────────────────────────────────────
+// ─── Helper: mapear fila de BD → Post con Rango ───────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToPost(row: any): Post {
+  const authorPosts = Number(row.author_posts || 0);
+  const authorLikes = Number(row.author_likes || 0);
+
   return {
-    id:         Number(row.id),
-    title:      row.title      as string,
-    content:    row.content    as string,
-    created_at: row.created_at as string,
-    user_id:    Number(row.user_id),
-    username:   row.username   as string,
-    like_count: Number(row.like_count),
+    id:           Number(row.id),
+    title:        row.title        as string,
+    content:      row.content      as string,
+    created_at:   row.created_at   as string,
+    user_id:      Number(row.user_id),
+    username:     row.username     as string,
+    like_count:   Number(row.like_count || 0),
+    author_posts: authorPosts,
+    author_likes: authorLikes,
+    author_rank:  getUserRank(authorPosts, authorLikes),
   };
 }
 
-// ─── Todos los posts (El Muro) ────────────────────────────────────────────────
+// ─── Todos los posts (El Muro) con rango y estadísticas de autor ──────────────
 export async function getPosts(): Promise<Post[]> {
   const result = await db.execute(`
+    WITH user_stats AS (
+      SELECT
+        u.id AS user_id,
+        COUNT(DISTINCT p_sub.id) AS total_posts,
+        COUNT(l_sub.id)          AS total_likes
+      FROM users u
+      LEFT JOIN posts p_sub ON u.id = p_sub.user_id
+      LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
+      GROUP BY u.id
+    )
     SELECT
-      p.id, p.title, p.content, p.created_at, p.user_id,
+      p.id,
+      p.title,
+      p.content,
+      p.created_at,
+      p.user_id,
       COALESCE(u.username, 'Usuario eliminado') AS username,
-      COUNT(l.id) AS like_count
+      COUNT(DISTINCT l.id)                     AS like_count,
+      COALESCE(s.total_posts, 0)               AS author_posts,
+      COALESCE(s.total_likes, 0)               AS author_likes
     FROM posts p
-    LEFT JOIN users u ON p.user_id = u.id
-    LEFT JOIN likes l ON p.id = l.post_id
+    LEFT JOIN users u      ON p.user_id = u.id
+    LEFT JOIN likes l      ON p.id = l.post_id
+    LEFT JOIN user_stats s ON p.user_id = s.user_id
     GROUP BY p.id
     ORDER BY p.created_at DESC
   `);
@@ -52,13 +79,30 @@ export async function getPosts(): Promise<Post[]> {
 export async function getMyPosts(userId: number): Promise<Post[]> {
   const result = await db.execute({
     sql: `
+      WITH user_stats AS (
+        SELECT
+          u.id AS user_id,
+          COUNT(DISTINCT p_sub.id) AS total_posts,
+          COUNT(l_sub.id)          AS total_likes
+        FROM users u
+        LEFT JOIN posts p_sub ON u.id = p_sub.user_id
+        LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
+        GROUP BY u.id
+      )
       SELECT
-        p.id, p.title, p.content, p.created_at, p.user_id,
+        p.id,
+        p.title,
+        p.content,
+        p.created_at,
+        p.user_id,
         COALESCE(u.username, 'Usuario eliminado') AS username,
-        COUNT(l.id) AS like_count
+        COUNT(DISTINCT l.id)                     AS like_count,
+        COALESCE(s.total_posts, 0)               AS author_posts,
+        COALESCE(s.total_likes, 0)               AS author_likes
       FROM posts p
-      LEFT JOIN users u ON p.user_id = u.id
-      LEFT JOIN likes l ON p.id = l.post_id
+      LEFT JOIN users u      ON p.user_id = u.id
+      LEFT JOIN likes l      ON p.id = l.post_id
+      LEFT JOIN user_stats s ON p.user_id = s.user_id
       WHERE p.user_id = ?
       GROUP BY p.id
       ORDER BY p.created_at DESC
@@ -66,6 +110,33 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
     args: [userId],
   });
   return result.rows.map(rowToPost);
+}
+
+// ─── Obtener estadísticas de un usuario específico ────────────────────────────
+export async function getUserStats(userId: number): Promise<{ totalPosts: number; totalLikes: number; rank: UserRank }> {
+  const result = await db.execute({
+    sql: `
+      SELECT
+        COUNT(DISTINCT p.id) AS total_posts,
+        COUNT(l.id)          AS total_likes
+      FROM users u
+      LEFT JOIN posts p ON u.id = p.user_id
+      LEFT JOIN likes l ON p.id = l.post_id
+      WHERE u.id = ?
+      GROUP BY u.id
+    `,
+    args: [userId],
+  });
+
+  const row = result.rows[0];
+  const totalPosts = Number(row?.total_posts || 0);
+  const totalLikes = Number(row?.total_likes || 0);
+
+  return {
+    totalPosts,
+    totalLikes,
+    rank: getUserRank(totalPosts, totalLikes),
+  };
 }
 
 // ─── Validaciones comunes ─────────────────────────────────────────────────────
@@ -129,5 +200,5 @@ export async function publishPost(
   revalidatePath('/');
   revalidatePath('/wall');
   revalidatePath('/profile');
-  redirect('/');   // ← navega al inicio tras publicar exitosamente
+  redirect('/');
 }
