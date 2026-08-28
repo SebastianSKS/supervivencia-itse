@@ -87,7 +87,9 @@ export default function RegisterPage() {
                 Username
               </label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors ${
+                  state?.error?.toLowerCase().includes('usuario') ? 'text-red-400' : 'text-zinc-500'
+                }`} />
                 <input
                   id="username"
                   name="username"
@@ -96,7 +98,11 @@ export default function RegisterPage() {
                   minLength={3}
                   autoComplete="username"
                   placeholder="veterano_itse"
-                  className="w-full bg-zinc-900/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 hover:border-white/20"
+                  className={`w-full bg-zinc-900/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all ${
+                    state?.error?.toLowerCase().includes('usuario')
+                      ? 'border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500/40'
+                      : 'border border-white/10 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 hover:border-white/20'
+                  }`}
                 />
               </div>
             </div>

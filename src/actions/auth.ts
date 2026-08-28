@@ -59,8 +59,8 @@ export async function register(
     await setSession({ userId, username, email, role: 'user' });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : '';
-    if (msg.includes('UNIQUE')) {
-      return { error: 'El nombre de usuario o correo ya está en uso.' };
+    if (msg.includes('UNIQUE') || msg.includes('idx_users_username') || msg.includes('users.username')) {
+      return { error: 'Este nombre de usuario ya está en uso. Elige otro.' };
     }
     return { error: 'Error al crear la cuenta. Intenta de nuevo.' };
   }
