@@ -194,6 +194,15 @@ export default function FollowListModal({
                       initialIsFollowing={u.isFollowing}
                       variant="inline"
                       currentUserId={currentUserId}
+                      onFollowChange={(newIsFollowing) => {
+                        setUsers((prev) =>
+                          prev.map((item) =>
+                            item.id === u.id
+                              ? { ...item, isFollowing: newIsFollowing }
+                              : item
+                          )
+                        );
+                      }}
                     />
                   </div>
                 )}

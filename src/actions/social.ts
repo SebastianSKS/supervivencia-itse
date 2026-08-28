@@ -74,6 +74,7 @@ export async function toggleFollow(targetUserId: number): Promise<{ success?: bo
       revalidatePath(`/user/[username]`, 'page');
       revalidatePath('/wall');
       revalidatePath('/profile');
+      revalidatePath('/');
       return { success: true, isFollowing: false };
     } else {
       // Seguir
@@ -91,6 +92,7 @@ export async function toggleFollow(targetUserId: number): Promise<{ success?: bo
       revalidatePath(`/user/[username]`, 'page');
       revalidatePath('/wall');
       revalidatePath('/profile');
+      revalidatePath('/');
       return { success: true, isFollowing: true };
     }
   } catch {
