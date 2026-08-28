@@ -75,7 +75,7 @@ export default function NotificationsDropdown({
 
       {/* Dropdown de Alertas */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50 animate-float-up">
+        <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:max-w-sm sm:w-96 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50 animate-float-up">
           {/* Cabecera */}
           <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider">

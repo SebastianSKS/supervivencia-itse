@@ -44,7 +44,7 @@ export default async function ProfilePage() {
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
 
-      <main className="max-w-3xl mx-auto px-4 py-12">
+      <main className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
 
         {/* ── Cabecera ─────────────────────────────────────────────────────── */}
         <div className="flex items-center gap-3 mb-8">

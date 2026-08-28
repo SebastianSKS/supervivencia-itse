@@ -16,7 +16,7 @@ export default function PostCard({ post, currentUserId = null }: Props) {
   const isAuthor = currentUserId === post.user_id;
 
   return (
-    <article className="group flex flex-col gap-4 bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-5 hover:bg-zinc-800/40 hover:border-white/10 transition-all duration-200">
+    <article className="w-full group flex flex-col gap-3.5 sm:gap-4 bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-4 sm:p-5 hover:bg-zinc-800/40 hover:border-white/10 transition-all duration-200">
 
       {/* Header: avatar + autor link + rango + botón seguir + fecha */}
       <div className="flex items-center justify-between">

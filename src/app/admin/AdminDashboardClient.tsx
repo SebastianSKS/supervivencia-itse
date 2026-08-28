@@ -63,10 +63,10 @@ export default function AdminDashboardClient({ data, session }: Props) {
 
   return (
     <div className="min-h-screen bg-black text-zinc-100 flex flex-col md:flex-row antialiased">
-      {/* ── SIDEBAR FIJO IZQUIERDO ────────────────────────────────────────── */}
-      <aside className="w-full md:w-64 bg-zinc-950 border-r border-zinc-800/80 flex flex-col shrink-0 md:sticky md:top-0 md:h-screen">
+      {/* ── SIDEBAR RESPONSIVE ────────────────────────────────────────────── */}
+      <aside className="w-full md:w-64 bg-zinc-950 border-b md:border-b-0 md:border-r border-zinc-800/80 flex flex-col shrink-0 md:sticky md:top-0 md:h-screen">
         {/* Logo & Marca */}
-        <div className="p-5 border-b border-zinc-800/80 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-zinc-800/80 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400">
               <Crown className="w-4 h-4" />
@@ -85,61 +85,61 @@ export default function AdminDashboardClient({ data, session }: Props) {
           </span>
         </div>
 
-        {/* Navegación */}
-        <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
-          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        {/* Navegación Responsive (grid en mobile, columna en desktop) */}
+        <nav className="p-2 sm:p-3 grid grid-cols-2 md:grid-cols-1 gap-1.5 md:space-y-1 flex-1 overflow-y-auto">
+          <div className="hidden md:block px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
             Gestión de Datos
           </div>
 
           <button
             onClick={() => setActiveTab('overview')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'overview'
                 ? 'bg-zinc-800/90 text-zinc-100 shadow-sm border border-zinc-700/50'
                 : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2.5">
-              <LayoutDashboard className="w-4 h-4 text-zinc-400" />
-              <span>Vista General</span>
+            <div className="flex items-center gap-2 truncate">
+              <LayoutDashboard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span className="truncate">Vista General</span>
             </div>
           </button>
 
           <button
             onClick={() => setActiveTab('users')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'users'
                 ? 'bg-zinc-800/90 text-zinc-100 shadow-sm border border-zinc-700/50'
                 : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2.5">
-              <Users className="w-4 h-4 text-zinc-400" />
-              <span>Gestión de Usuarios</span>
+            <div className="flex items-center gap-2 truncate">
+              <Users className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span className="truncate">Usuarios</span>
             </div>
-            <span className="text-[10px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-400">
+            <span className="text-[10px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-400 ml-1">
               {stats.totalUsers}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('reports')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'reports'
                 ? 'bg-zinc-800/90 text-zinc-100 shadow-sm border border-zinc-700/50'
                 : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2.5">
-              <ShieldAlert className="w-4 h-4 text-zinc-400" />
-              <span>Reportes Pendientes</span>
+            <div className="flex items-center gap-2 truncate">
+              <ShieldAlert className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span className="truncate">Reportes</span>
             </div>
             {stats.pendingReportsCount > 0 ? (
-              <span className="text-[10px] font-bold bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">
+              <span className="text-[10px] font-bold bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 ml-1">
                 {stats.pendingReportsCount}
               </span>
             ) : (
-              <span className="text-[10px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-500">
+              <span className="text-[10px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-500 ml-1">
                 0
               </span>
             )}
@@ -147,24 +147,24 @@ export default function AdminDashboardClient({ data, session }: Props) {
 
           <button
             onClick={() => setActiveTab('posts')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'posts'
                 ? 'bg-zinc-800/90 text-zinc-100 shadow-sm border border-zinc-700/50'
                 : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2.5">
-              <FileText className="w-4 h-4 text-zinc-400" />
-              <span>Todos los Posts</span>
+            <div className="flex items-center gap-2 truncate">
+              <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span className="truncate">Posts</span>
             </div>
-            <span className="text-[10px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-400">
+            <span className="text-[10px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-400 ml-1">
               {stats.totalPosts}
             </span>
           </button>
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="p-3 border-t border-zinc-800/80 space-y-2 bg-zinc-950/60">
+        <div className="p-3 border-t border-zinc-800/80 space-y-2 bg-zinc-950/60 hidden md:block">
           <Link
             href="/"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors"
@@ -200,18 +200,18 @@ export default function AdminDashboardClient({ data, session }: Props) {
       </aside>
 
       {/* ── CONTENIDO PRINCIPAL DEL DASHBOARD ─────────────────────────────── */}
-      <main className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 overflow-y-auto">
         {/* Top Header */}
-        <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+        <header className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
           <div>
-            <h1 className="text-xl font-bold text-zinc-100 tracking-tight">
+            <h1 className="text-lg sm:text-xl font-bold text-zinc-100 tracking-tight">
               {activeTab === 'overview' && 'Vista General del Sistema'}
               {activeTab === 'users' && 'Directorio y Control de Usuarios'}
               {activeTab === 'reports' && 'Bandeja de Reportes de Moderación'}
               {activeTab === 'posts' && 'Catálogo Completo de Publicaciones'}
             </h1>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Base de Datos: <span className="text-zinc-300 font-mono">Turso AWS us-west-2 (libSQL)</span> • Estado: <span className="text-emerald-400">Activo</span>
+              Base de Datos: <span className="text-zinc-300 font-mono">Turso AWS (libSQL)</span> • Estado: <span className="text-emerald-400">Activo</span>
             </p>
           </div>
 
@@ -226,95 +226,95 @@ export default function AdminDashboardClient({ data, session }: Props) {
           </div>
         </header>
 
-        {/* ── TOP METRICS CARDS (KPIs de Alto Impacto) ──────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* ── TOP METRICS CARDS (KPIs Responsive 2x2 en mobile) ────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {/* Card 1: Usuarios */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Total de Usuarios
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3.5 sm:p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <span className="text-[11px] sm:text-xs font-medium text-zinc-400 uppercase tracking-wider truncate">
+                Usuarios
               </span>
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                <Users className="w-4 h-4" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="text-2xl font-black text-zinc-100 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-zinc-100 font-mono">
               {stats.totalUsers}
             </div>
-            <p className="text-[11px] text-zinc-500 mt-1">
-              Alumnos y veteranos registrados
+            <p className="text-[10px] sm:text-[11px] text-zinc-500 mt-1 truncate">
+              Alumnos registrados
             </p>
           </div>
 
           {/* Card 2: Posts */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Total de Posts
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3.5 sm:p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <span className="text-[11px] sm:text-xs font-medium text-zinc-400 uppercase tracking-wider truncate">
+                Posts
               </span>
-              <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                <FileText className="w-4 h-4" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="text-2xl font-black text-zinc-100 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-zinc-100 font-mono">
               {stats.totalPosts}
             </div>
-            <p className="text-[11px] text-zinc-500 mt-1">
-              Consejos activos en la plataforma
+            <p className="text-[10px] sm:text-[11px] text-zinc-500 mt-1 truncate">
+              Consejos en el muro
             </p>
           </div>
 
           {/* Card 3: Likes */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Likes Globales
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3.5 sm:p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <span className="text-[11px] sm:text-xs font-medium text-zinc-400 uppercase tracking-wider truncate">
+                Likes
               </span>
-              <div className="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
-                <Heart className="w-4 h-4" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 shrink-0">
+                <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="text-2xl font-black text-zinc-100 font-mono">
+            <div className="text-xl sm:text-2xl font-black text-zinc-100 font-mono">
               {stats.totalLikes}
             </div>
-            <p className="text-[11px] text-zinc-500 mt-1">
-              Reacciones de valor acumuladas
+            <p className="text-[10px] sm:text-[11px] text-zinc-500 mt-1 truncate">
+              Reacciones acumuladas
             </p>
           </div>
 
           {/* Card 4: Reportes */}
           <div
-            className={`border rounded-xl p-4 shadow-sm transition-colors ${
+            className={`border rounded-xl p-3.5 sm:p-4 shadow-sm transition-colors ${
               stats.pendingReportsCount > 0
                 ? 'bg-red-950/20 border-red-500/30'
                 : 'bg-zinc-900/60 border-zinc-800'
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Reportes Pendientes
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <span className="text-[11px] sm:text-xs font-medium text-zinc-400 uppercase tracking-wider truncate">
+                Reportes
               </span>
               <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${
                   stats.pendingReportsCount > 0
                     ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                     : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
                 }`}
               >
-                <ShieldAlert className="w-4 h-4" />
+                <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
             <div
-              className={`text-2xl font-black font-mono ${
+              className={`text-xl sm:text-2xl font-black font-mono ${
                 stats.pendingReportsCount > 0 ? 'text-red-400' : 'text-zinc-100'
               }`}
             >
               {stats.pendingReportsCount}
             </div>
-            <p className="text-[11px] text-zinc-500 mt-1">
+            <p className="text-[10px] sm:text-[11px] text-zinc-500 mt-1 truncate">
               {stats.pendingReportsCount > 0
-                ? 'Acción requerida de moderación'
-                : 'Comunidad en orden sin reportes'}
+                ? 'Requiere revisión'
+                : 'Sin reportes'}
             </p>
           </div>
         </div>
@@ -327,7 +327,7 @@ export default function AdminDashboardClient({ data, session }: Props) {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-red-400" />
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-200">
+                  <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200">
                     Reportes que Requieren Atención ({reports.length})
                   </h2>
                 </div>
@@ -347,8 +347,8 @@ export default function AdminDashboardClient({ data, session }: Props) {
                     No hay reportes pendientes de moderación.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left text-xs min-w-[640px]">
                       <thead className="bg-zinc-950/80 border-b border-zinc-800 text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
                         <tr>
                           <th className="px-4 py-3">ID Rep</th>
@@ -426,7 +426,7 @@ export default function AdminDashboardClient({ data, session }: Props) {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-zinc-400" />
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-200">
+                  <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200">
                     Usuarios Recientes ({users.length})
                   </h2>
                 </div>
@@ -439,8 +439,8 @@ export default function AdminDashboardClient({ data, session }: Props) {
               </div>
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-left text-xs min-w-[580px]">
                     <thead className="bg-zinc-950/80 border-b border-zinc-800 text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
                       <tr>
                         <th className="px-4 py-3">ID</th>
@@ -495,7 +495,7 @@ export default function AdminDashboardClient({ data, session }: Props) {
         {activeTab === 'users' && (
           <div className="space-y-4">
             {/* Barra de búsqueda */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="relative flex-1 max-w-sm">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
@@ -513,8 +513,8 @@ export default function AdminDashboardClient({ data, session }: Props) {
 
             {/* Tabla Alta Densidad de Usuarios */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-xs min-w-[700px]">
                   <thead className="bg-zinc-950/90 border-b border-zinc-800 text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
                     <tr>
                       <th className="px-4 py-3">ID</th>
@@ -628,7 +628,7 @@ export default function AdminDashboardClient({ data, session }: Props) {
         {/* ── TAB 3: REPORTES PENDIENTES ────────────────────────────────────── */}
         {activeTab === 'reports' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <span className="text-xs text-zinc-400">
                 Lista de todos los reportes activos generados por la comunidad
               </span>
@@ -643,8 +643,8 @@ export default function AdminDashboardClient({ data, session }: Props) {
                   No hay reportes pendientes de moderación en este momento.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-left text-xs min-w-[700px]">
                     <thead className="bg-zinc-950/90 border-b border-zinc-800 text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
                       <tr>
                         <th className="px-4 py-3">ID Rep</th>
@@ -726,7 +726,7 @@ export default function AdminDashboardClient({ data, session }: Props) {
         {/* ── TAB 4: TODOS LOS POSTS ────────────────────────────────────────── */}
         {activeTab === 'posts' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="relative flex-1 max-w-sm">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
@@ -743,8 +743,8 @@ export default function AdminDashboardClient({ data, session }: Props) {
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-xs min-w-[700px]">
                   <thead className="bg-zinc-950/90 border-b border-zinc-800 text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
                     <tr>
                       <th className="px-4 py-3">ID</th>

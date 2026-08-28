@@ -47,7 +47,7 @@ export default function UserSearchInput() {
   }, []);
 
   return (
-    <div ref={dropdownRef} className="relative w-full max-w-[200px] sm:max-w-xs">
+    <div ref={dropdownRef} className="relative w-full">
       <div className="relative flex items-center">
         <Search className="w-3.5 h-3.5 absolute left-3 text-zinc-500 pointer-events-none" />
         <input

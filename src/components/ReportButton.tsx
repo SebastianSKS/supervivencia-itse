@@ -90,10 +90,10 @@ export default function ReportButton({
         <span className="hidden sm:inline">Reportar</span>
       </button>
 
-      {/* Modal de Reporte */}
+      {/* Modal de Reporte Adaptable */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-float-up">
-          <div className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-2xl shadow-black relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-float-up">
+          <div className="w-[92%] sm:max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-5 sm:p-6 shadow-2xl shadow-black relative max-h-[85vh] overflow-y-auto">
             {/* Botón cerrar */}
             <button
               onClick={handleClose}

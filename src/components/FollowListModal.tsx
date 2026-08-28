@@ -86,9 +86,9 @@ export default function FollowListModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-float-up">
-      {/* Contenedor Modal */}
-      <div className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl shadow-black overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-float-up">
+      {/* Contenedor Modal Adaptable */}
+      <div className="w-[92%] sm:max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl shadow-black overflow-hidden flex flex-col max-h-[85vh]">
         {/* Cabecera con pestañas */}
         <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2">

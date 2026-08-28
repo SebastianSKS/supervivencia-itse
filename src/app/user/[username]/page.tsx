@@ -45,7 +45,7 @@ export default async function UserProfilePage({ params }: Props) {
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 py-12">
+      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
         {/* Back navigation */}
         <Link
           href="/wall"
@@ -56,7 +56,7 @@ export default async function UserProfilePage({ params }: Props) {
         </Link>
 
         {/* ── Tarjeta Principal de Perfil ───────────────────────────────────── */}
-        <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-8 shadow-xl shadow-black/40">
+        <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-5 sm:p-8 mb-8 shadow-xl shadow-black/40">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               {/* Avatar */}
