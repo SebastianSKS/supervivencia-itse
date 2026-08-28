@@ -46,10 +46,21 @@ function rowToPost(row: any): Post {
   };
 }
 
-// ─── Todos los posts (El Muro) ────────────────────────────────────────────────
-export async function getPosts(): Promise<Post[]> {
+export type PostSortOption = 'newest' | 'oldest' | 'popular';
+
+// ─── Todos los posts (El Muro con ordenamiento dinámico) ──────────────────────
+export async function getPosts(sort?: string): Promise<Post[]> {
   const session = await getSession();
   const currentUserId = session?.userId ?? -1;
+
+  // Lógica de ordenamiento dinámico
+  let orderByClause = 'ORDER BY p.created_at DESC';
+
+  if (sort === 'oldest') {
+    orderByClause = 'ORDER BY p.created_at ASC';
+  } else if (sort === 'popular') {
+    orderByClause = 'ORDER BY like_count DESC, p.created_at DESC';
+  }
 
   const result = await db.execute({
     sql: `
@@ -81,7 +92,7 @@ export async function getPosts(): Promise<Post[]> {
       LEFT JOIN user_stats s   ON p.user_id = s.user_id
       LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
       GROUP BY p.id
-      ORDER BY p.created_at DESC
+      ${orderByClause}
     `,
     args: [currentUserId, currentUserId, currentUserId],
   });

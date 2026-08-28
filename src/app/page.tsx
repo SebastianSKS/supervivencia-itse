@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import PostCard from '@/components/PostCard';
+import PostSortSelector from '@/components/PostSortSelector';
 import { getSession } from '@/lib/auth';
 import { getPosts } from '@/actions/posts';
 import { ArrowDown, LayoutGrid, Users, BookOpen, Heart, PenSquare } from 'lucide-react';
@@ -7,8 +8,13 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
-  const [session, posts] = await Promise.all([getSession(), getPosts()]);
+interface Props {
+  searchParams: Promise<{ sort?: string }>;
+}
+
+export default async function HomePage({ searchParams }: Props) {
+  const { sort } = await searchParams;
+  const [session, posts] = await Promise.all([getSession(), getPosts(sort)]);
   const totalLikes = posts.reduce((sum, p) => sum + p.like_count, 0);
 
   return (
@@ -69,7 +75,7 @@ export default async function HomePage() {
 
       {/* ── El Muro ───────────────────────────────────────────────────────────── */}
       <section id="muro" className="max-w-4xl mx-auto px-4 py-10 sm:py-14">
-        {/* Encabezado + botón publicar responsive */}
+        {/* Encabezado + Selector de ordenamiento + botón publicar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
@@ -81,29 +87,34 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {session ? (
-            <Link
-              href="/publicar"
-              className="inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold bg-zinc-100 text-zinc-900 hover:bg-white px-4 py-2.5 rounded-xl transition-colors shadow-sm shrink-0"
-            >
-              <PenSquare className="w-4 h-4" />
-              + Nuevo consejo
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 text-xs sm:text-sm text-zinc-400 hover:text-zinc-200 border border-white/10 hover:border-white/20 bg-zinc-900/40 px-4 py-2.5 rounded-xl transition-all shrink-0"
-            >
-              Inicia sesión para publicar
-            </Link>
-          )}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Selector de ordenamiento dinámico */}
+            <PostSortSelector />
+
+            {session ? (
+              <Link
+                href="/publicar"
+                className="inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold bg-zinc-100 text-zinc-900 hover:bg-white px-4 py-2.5 rounded-xl transition-colors shadow-sm shrink-0"
+              >
+                <PenSquare className="w-4 h-4" />
+                + Nuevo consejo
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 text-xs sm:text-sm text-zinc-400 hover:text-zinc-200 border border-white/10 hover:border-white/20 bg-zinc-900/40 px-4 py-2.5 rounded-xl transition-all shrink-0"
+              >
+                Inicia sesión para publicar
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Grid de posts responsive */}
         {posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 sm:py-24 border border-dashed border-white/[0.06] rounded-2xl w-full px-4 text-center">
             <LayoutGrid className="w-10 h-10 text-zinc-800 mb-3" />
-            <p className="text-zinc-500 font-medium text-sm">El muro está vacío</p>
+            <p className="text-zinc-500 font-medium text-sm">No se encontraron consejos</p>
             <p className="text-zinc-600 text-xs mt-1">
               {session ? '¡Sé el primero en dejar un consejo!' : 'Inicia sesión para publicar el primer consejo.'}
             </p>
