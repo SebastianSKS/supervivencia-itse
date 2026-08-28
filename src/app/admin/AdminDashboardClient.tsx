@@ -30,6 +30,7 @@ import {
   Search,
   MessageSquare,
   AlertTriangle,
+  Eye,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -775,9 +776,13 @@ export default function AdminDashboardClient({ data, session }: Props) {
                           {p.content}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 text-zinc-300 mr-2">
+                          <span className="inline-flex items-center gap-1 text-zinc-300 mr-2.5">
                             <Heart className="w-3 h-3 text-red-400" />
                             {p.likeCount}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-zinc-400 mr-2.5 font-mono text-[11px]">
+                            <Eye className="w-3 h-3 text-zinc-500" />
+                            {p.views}
                           </span>
                           {p.reportCount > 0 && (
                             <span className="inline-flex items-center gap-1 text-red-400 font-bold bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 text-[10px]">

@@ -41,6 +41,7 @@ export interface AdminPostItem {
   content: string;
   authorUsername: string;
   likeCount: number;
+  views: number;
   reportCount: number;
   createdAt: string;
 }
@@ -149,6 +150,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       p.id,
       p.title,
       p.content,
+      COALESCE(p.views, 0) AS views,
       p.created_at,
       COALESCE(u.username, 'Usuario eliminado') AS author_username,
       COUNT(DISTINCT l.id) AS like_count,
@@ -167,6 +169,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     content: row.content as string,
     authorUsername: row.author_username as string,
     likeCount: Number(row.like_count || 0),
+    views: Number(row.views || 0),
     reportCount: Number(row.report_count || 0),
     createdAt: row.created_at as string,
   }));

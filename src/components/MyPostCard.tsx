@@ -2,7 +2,8 @@ import { formatDate } from '@/lib/utils';
 import { deleteMyPost } from '@/actions/user';
 import LikeButton from './LikeButton';
 import RankBadge from './RankBadge';
-import { Trash2, Heart } from 'lucide-react';
+import ViewTracker from './ViewTracker';
+import { Trash2 } from 'lucide-react';
 import type { Post } from '@/actions/posts';
 
 interface Props {
@@ -12,13 +13,13 @@ interface Props {
 
 /**
  * Variante de PostCard para /profile.
- * Incluye botón de eliminar con validación de ownership en el servidor y badge de rango.
+ * Incluye botón de eliminar con validación de ownership en el servidor, badge de rango y vistas.
  */
 export default function MyPostCard({ post, currentUserId = null }: Props) {
   const initial = post.username.charAt(0).toUpperCase();
 
   return (
-    <article className="group flex flex-col gap-4 bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-5 hover:bg-zinc-800/40 hover:border-white/10 transition-all duration-200">
+    <article className="group flex flex-col gap-4 bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-4 sm:p-5 hover:bg-zinc-800/40 hover:border-white/10 transition-all duration-200">
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -34,12 +35,6 @@ export default function MyPostCard({ post, currentUserId = null }: Props) {
             <p className="text-zinc-600 text-xs mt-1">{formatDate(post.created_at)}</p>
           </div>
         </div>
-
-        {/* Likes en el header */}
-        <div className="flex items-center gap-1 text-zinc-600 text-xs">
-          <Heart className="w-3.5 h-3.5 text-red-500/50" />
-          {post.like_count}
-        </div>
       </div>
 
       {/* Título + contenido */}
@@ -52,15 +47,18 @@ export default function MyPostCard({ post, currentUserId = null }: Props) {
         </p>
       </div>
 
-      {/* Footer: like + eliminar */}
-      <div className="pt-1 border-t border-white/[0.04] flex items-center justify-between">
-        <LikeButton
-          postId={post.id}
-          initialCount={post.like_count}
-          initialLiked={post.has_liked}
-          authorId={post.user_id}
-          currentUserId={currentUserId}
-        />
+      {/* Footer: like + radar de vistas + eliminar */}
+      <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <LikeButton
+            postId={post.id}
+            initialCount={post.like_count}
+            initialLiked={post.has_liked}
+            authorId={post.user_id}
+            currentUserId={currentUserId}
+          />
+          <ViewTracker postId={post.id} initialViews={post.views} />
+        </div>
 
         {/* Botón eliminar — valida ownership en el servidor */}
         <form action={deleteMyPost.bind(null, post.id)}>

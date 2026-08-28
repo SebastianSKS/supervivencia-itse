@@ -54,6 +54,7 @@ const migrations = [
                    REFERENCES users(id) ON DELETE CASCADE,
         title      TEXT    NOT NULL,
         content    TEXT    NOT NULL,
+        views      INTEGER NOT NULL DEFAULT 0,
         created_at TEXT    NOT NULL DEFAULT (datetime('now'))
       )
     `,

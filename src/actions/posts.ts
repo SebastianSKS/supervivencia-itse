@@ -15,6 +15,7 @@ export type Post = {
   user_id: number;
   username: string;
   like_count: number;
+  views: number;
   author_posts: number;
   author_likes: number;
   author_rank: UserRank;
@@ -24,7 +25,7 @@ export type Post = {
 
 export type CreatePostState = { error?: string; success?: boolean } | null;
 
-// ─── Helper: mapear fila de BD → Post con Rango, Likes y Follow ───────────────
+// ─── Helper: mapear fila de BD → Post con Rango, Likes, Views y Follow ───────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToPost(row: any): Post {
   const authorPosts = Number(row.author_posts || 0);
@@ -38,6 +39,7 @@ function rowToPost(row: any): Post {
     user_id:             Number(row.user_id),
     username:            row.username     as string,
     like_count:          Number(row.like_count || 0),
+    views:               Number(row.views || 0),
     author_posts:        authorPosts,
     author_likes:        authorLikes,
     author_rank:         getUserRank(authorPosts, authorLikes),
@@ -46,20 +48,24 @@ function rowToPost(row: any): Post {
   };
 }
 
-export type PostSortOption = 'newest' | 'oldest' | 'popular';
+export type PostSortOption = 'random' | 'newest' | 'oldest' | 'popular';
 
-// ─── Todos los posts (El Muro con ordenamiento dinámico) ──────────────────────
+// ─── Todos los posts (El Muro con Algoritmo Aleatorio / Dinámico) ─────────────
 export async function getPosts(sort?: string): Promise<Post[]> {
   const session = await getSession();
   const currentUserId = session?.userId ?? -1;
 
-  // Lógica de ordenamiento dinámico
-  let orderByClause = 'ORDER BY p.created_at DESC';
+  // Lógica de ordenamiento dinámico: por defecto ALEATORIO (estilo TikTok/Facebook)
+  let orderByClause = 'ORDER BY RANDOM()';
 
-  if (sort === 'oldest') {
+  if (sort === 'newest') {
+    orderByClause = 'ORDER BY p.created_at DESC';
+  } else if (sort === 'oldest') {
     orderByClause = 'ORDER BY p.created_at ASC';
   } else if (sort === 'popular') {
     orderByClause = 'ORDER BY like_count DESC, p.created_at DESC';
+  } else if (sort === 'random') {
+    orderByClause = 'ORDER BY RANDOM()';
   }
 
   const result = await db.execute({
@@ -78,6 +84,7 @@ export async function getPosts(sort?: string): Promise<Post[]> {
         p.id,
         p.title,
         p.content,
+        COALESCE(p.views, 0)                     AS views,
         p.created_at,
         p.user_id,
         COALESCE(u.username, 'Usuario eliminado') AS username,
@@ -100,6 +107,18 @@ export async function getPosts(sort?: string): Promise<Post[]> {
   return result.rows.map(rowToPost);
 }
 
+// ─── Incrementar contador de vistas de un post ────────────────────────────────
+export async function incrementViews(postId: number): Promise<void> {
+  try {
+    await db.execute({
+      sql: 'UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE id = ?',
+      args: [postId],
+    });
+  } catch {
+    // Fallo silencioso para no bloquear la experiencia de usuario
+  }
+}
+
 // ─── Posts del usuario actual (Perfil) ────────────────────────────────────────
 export async function getMyPosts(userId: number): Promise<Post[]> {
   const result = await db.execute({
@@ -118,6 +137,7 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
         p.id,
         p.title,
         p.content,
+        COALESCE(p.views, 0)                     AS views,
         p.created_at,
         p.user_id,
         COALESCE(u.username, 'Usuario eliminado') AS username,

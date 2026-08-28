@@ -3,6 +3,7 @@ import LikeButton from './LikeButton';
 import RankBadge from './RankBadge';
 import ReportButton from './ReportButton';
 import FollowButton from './FollowButton';
+import ViewTracker from './ViewTracker';
 import type { Post } from '@/actions/posts';
 import Link from 'next/link';
 
@@ -62,15 +63,19 @@ export default function PostCard({ post, currentUserId = null }: Props) {
         </p>
       </div>
 
-      {/* Footer: like button + report button */}
-      <div className="pt-1 border-t border-white/[0.04] flex items-center justify-between">
-        <LikeButton
-          postId={post.id}
-          initialCount={post.like_count}
-          initialLiked={post.has_liked}
-          authorId={post.user_id}
-          currentUserId={currentUserId}
-        />
+      {/* Footer: like button + radar de vistas + botón reportar */}
+      <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <LikeButton
+            postId={post.id}
+            initialCount={post.like_count}
+            initialLiked={post.has_liked}
+            authorId={post.user_id}
+            currentUserId={currentUserId}
+          />
+          <ViewTracker postId={post.id} initialViews={post.views} />
+        </div>
+
         <ReportButton
           postId={post.id}
           authorId={post.user_id}
