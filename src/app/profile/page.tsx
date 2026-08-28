@@ -2,11 +2,27 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { logout } from '@/actions/auth';
 import { getMyPosts, getUserStats } from '@/actions/posts';
+import { getRankProgress, RANKS_CODEX } from '@/lib/ranks';
 import UpdateUsernameForm from './UpdateUsernameForm';
 import MyPostCard from '@/components/MyPostCard';
 import Navbar from '@/components/Navbar';
 import RankBadge from '@/components/RankBadge';
-import { User, Shield, Calendar, LogOut, Crown, LayoutGrid, PenSquare, Heart, Award } from 'lucide-react';
+import {
+  User,
+  Shield,
+  Calendar,
+  LogOut,
+  Crown,
+  LayoutGrid,
+  PenSquare,
+  Heart,
+  Award,
+  Zap,
+  BookOpen,
+  ShieldCheck,
+  Star,
+  CheckCircle2,
+} from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +37,7 @@ export default async function ProfilePage() {
   ]);
 
   const isAdmin = session.role === 'admin';
+  const progress = getRankProgress(userStats.totalPosts, userStats.totalLikes);
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -34,8 +51,8 @@ export default async function ProfilePage() {
           <h1 className="text-xl font-bold text-zinc-100 tracking-tight">Mi Perfil</h1>
         </div>
 
-        {/* ── Info del usuario ──────────────────────────────────────────────── */}
-        <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 mb-4">
+        {/* ── Info del usuario + Barra de Progreso (XP) ────────────────────── */}
+        <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 mb-6">
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div
@@ -49,7 +66,7 @@ export default async function ProfilePage() {
               {session.username.charAt(0).toUpperCase()}
             </div>
 
-            {/* Info */}
+            {/* Info Principal */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap mb-3">
                 <h2 className="text-xl font-bold text-zinc-100">@{session.username}</h2>
@@ -80,6 +97,90 @@ export default async function ProfilePage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* ── Barra de Progreso XP ────────────────────────────────────────── */}
+          <div className="mt-6 pt-5 border-t border-white/[0.06]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300">
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>Progreso hacia siguiente rango</span>
+              </div>
+              <span className="text-[11px] text-zinc-400">
+                {progress.message}
+              </span>
+            </div>
+
+            {/* Barra */}
+            <div className="w-full h-2.5 bg-zinc-800/80 rounded-full overflow-hidden p-0.5 border border-white/[0.04]">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${
+                  progress.isMax
+                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-300 shadow-sm shadow-amber-500/40'
+                    : progress.currentRank === 'Veterano'
+                    ? 'bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-sm shadow-cyan-500/30'
+                    : progress.currentRank === 'Estudiante'
+                    ? 'bg-gradient-to-r from-indigo-500 to-cyan-500'
+                    : 'bg-zinc-500'
+                }`}
+                style={{ width: `${progress.percentage}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Códice de Rangos (Guía de Logros) ─────────────────────────────── */}
+        <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Award className="w-4 h-4 text-zinc-400" />
+            <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">
+              Guía de Rangos y Logros
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {RANKS_CODEX.map((rank) => {
+              const isCurrent = userStats.rank === rank.id;
+
+              return (
+                <div
+                  key={rank.id}
+                  className={`p-4 rounded-xl border transition-all ${
+                    isCurrent
+                      ? rank.id === 'Leyenda'
+                        ? 'bg-amber-950/20 border-amber-500/40 shadow-sm shadow-amber-500/10'
+                        : rank.id === 'Veterano'
+                        ? 'bg-cyan-950/20 border-cyan-500/40 shadow-sm shadow-cyan-500/10'
+                        : 'bg-zinc-800/60 border-zinc-500/40 shadow-sm'
+                      : 'bg-zinc-900/30 border-white/[0.04] opacity-50 grayscale hover:opacity-75 hover:grayscale-0'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-2">
+                      {rank.id === 'Leyenda' && <Star className="w-4 h-4 text-amber-400 fill-amber-400" />}
+                      {rank.id === 'Veterano' && <ShieldCheck className="w-4 h-4 text-cyan-400" />}
+                      {rank.id === 'Estudiante' && <BookOpen className="w-4 h-4 text-zinc-300" />}
+                      {rank.id === 'Recluta' && <User className="w-4 h-4 text-zinc-400" />}
+                      <span className="font-bold text-sm text-zinc-100">{rank.name}</span>
+                    </div>
+
+                    {isCurrent ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Actual
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-medium text-zinc-500">
+                        {rank.requirement}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-zinc-400 leading-relaxed mt-1">
+                    {rank.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

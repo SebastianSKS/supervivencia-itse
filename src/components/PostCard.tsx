@@ -1,6 +1,7 @@
 import { formatDate } from '@/lib/utils';
 import LikeButton from './LikeButton';
 import RankBadge from './RankBadge';
+import ReportButton from './ReportButton';
 import type { Post } from '@/actions/posts';
 
 interface Props {
@@ -40,12 +41,17 @@ export default function PostCard({ post, currentUserId = null }: Props) {
         </p>
       </div>
 
-      {/* Footer: like button con toggle y estado de usuario */}
-      <div className="pt-1 border-t border-white/[0.04] flex items-center">
+      {/* Footer: like button + report button */}
+      <div className="pt-1 border-t border-white/[0.04] flex items-center justify-between">
         <LikeButton
           postId={post.id}
           initialCount={post.like_count}
           initialLiked={post.has_liked}
+          authorId={post.user_id}
+          currentUserId={currentUserId}
+        />
+        <ReportButton
+          postId={post.id}
           authorId={post.user_id}
           currentUserId={currentUserId}
         />

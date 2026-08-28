@@ -73,6 +73,21 @@ const migrations = [
     `,
   },
   {
+    name: 'reports',
+    sql: `
+      CREATE TABLE IF NOT EXISTS reports (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id    INTEGER NOT NULL
+                   REFERENCES posts(id) ON DELETE CASCADE,
+        user_id    INTEGER NOT NULL
+                   REFERENCES users(id) ON DELETE CASCADE,
+        reason     TEXT    NOT NULL,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(post_id, user_id)
+      )
+    `,
+  },
+  {
     name: 'index: posts.user_id',
     sql: `CREATE INDEX IF NOT EXISTS idx_posts_user_id   ON posts(user_id)`,
   },
@@ -83,6 +98,14 @@ const migrations = [
   {
     name: 'index: likes.post_id',
     sql: `CREATE INDEX IF NOT EXISTS idx_likes_post_id   ON likes(post_id)`,
+  },
+  {
+    name: 'index: reports.post_id',
+    sql: `CREATE INDEX IF NOT EXISTS idx_reports_post_id ON reports(post_id)`,
+  },
+  {
+    name: 'index: reports.user_id',
+    sql: `CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id)`,
   },
 ];
 
