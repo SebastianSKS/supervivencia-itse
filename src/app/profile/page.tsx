@@ -7,6 +7,7 @@ import UpdateUsernameForm from './UpdateUsernameForm';
 import MyPostCard from '@/components/MyPostCard';
 import Navbar from '@/components/Navbar';
 import RankBadge from '@/components/RankBadge';
+import ProfileFollowStats from '@/components/ProfileFollowStats';
 import {
   User,
   Shield,
@@ -68,7 +69,7 @@ export default async function ProfilePage() {
 
             {/* Info Principal */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2.5 flex-wrap mb-3">
+              <div className="flex items-center gap-2.5 flex-wrap mb-2">
                 <h2 className="text-xl font-bold text-zinc-100">@{session.username}</h2>
                 <RankBadge rank={userStats.rank} size="md" />
                 {isAdmin && (
@@ -78,24 +79,29 @@ export default async function ProfilePage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                <div className="flex items-center gap-2 text-xs text-zinc-400">
+              <div className="flex items-center gap-4 text-xs text-zinc-400">
+                <div className="flex items-center gap-1.5 truncate">
                   <User className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
                   <span className="truncate">{session.email}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-400">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
-                  <span>{userStats.totalPosts} {userStats.totalPosts === 1 ? 'consejo publicado' : 'consejos publicados'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-400">
-                  <Heart className="w-3.5 h-3.5 text-red-500/60 shrink-0" />
-                  <span>{userStats.totalLikes} {userStats.totalLikes === 1 ? 'like recibido' : 'likes recibidos'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <Award className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
                   <span>Nivel: <strong className="text-zinc-200">{userStats.rank}</strong></span>
                 </div>
               </div>
+
+              {/* ── Contadores Sociales Interactivos (Seguidores & Seguidos Modal) ── */}
+              <ProfileFollowStats
+                userId={session.userId}
+                username={session.username}
+                followersCount={userStats.followersCount}
+                followingCount={userStats.followingCount}
+                totalPosts={userStats.totalPosts}
+                totalLikes={userStats.totalLikes}
+                rank={userStats.rank}
+                currentUserId={session.userId}
+                mode="profile"
+              />
             </div>
           </div>
 

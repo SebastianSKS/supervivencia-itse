@@ -130,28 +130,40 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
 }
 
 // ─── Obtener estadísticas de un usuario específico ────────────────────────────
-export async function getUserStats(userId: number): Promise<{ totalPosts: number; totalLikes: number; rank: UserRank }> {
+export async function getUserStats(userId: number): Promise<{
+  totalPosts: number;
+  totalLikes: number;
+  followersCount: number;
+  followingCount: number;
+  rank: UserRank;
+}> {
   const result = await db.execute({
     sql: `
       SELECT
         COUNT(DISTINCT p.id) AS total_posts,
-        COUNT(l.id)          AS total_likes
+        COUNT(DISTINCT l.id) AS total_likes,
+        (SELECT COUNT(*) FROM follows WHERE following_id = ?) AS followers_count,
+        (SELECT COUNT(*) FROM follows WHERE follower_id = ?)  AS following_count
       FROM users u
       LEFT JOIN posts p ON u.id = p.user_id
       LEFT JOIN likes l ON p.id = l.post_id
       WHERE u.id = ?
       GROUP BY u.id
     `,
-    args: [userId],
+    args: [userId, userId, userId],
   });
 
   const row = result.rows[0];
   const totalPosts = Number(row?.total_posts || 0);
   const totalLikes = Number(row?.total_likes || 0);
+  const followersCount = Number(row?.followers_count || 0);
+  const followingCount = Number(row?.following_count || 0);
 
   return {
     totalPosts,
     totalLikes,
+    followersCount,
+    followingCount,
     rank: getUserRank(totalPosts, totalLikes),
   };
 }

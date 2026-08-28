@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import PostCard from '@/components/PostCard';
 import RankBadge from '@/components/RankBadge';
 import FollowButton from '@/components/FollowButton';
+import ProfileFollowStats from '@/components/ProfileFollowStats';
 import { notFound } from 'next/navigation';
 import {
   User,
@@ -109,40 +110,18 @@ export default async function UserProfilePage({ params }: Props) {
             </div>
           </div>
 
-          {/* ── Estadísticas y Contadores Sociales ─────────────────────────── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 pt-6 border-t border-white/[0.06]">
-            {/* Seguidores */}
-            <div className="bg-zinc-950/60 border border-white/[0.04] p-3.5 rounded-xl text-center">
-              <div className="text-xl font-bold font-mono text-zinc-100">
-                {profile.followersCount}
-              </div>
-              <span className="text-xs text-zinc-500 font-medium">Seguidores</span>
-            </div>
-
-            {/* Seguidos */}
-            <div className="bg-zinc-950/60 border border-white/[0.04] p-3.5 rounded-xl text-center">
-              <div className="text-xl font-bold font-mono text-zinc-100">
-                {profile.followingCount}
-              </div>
-              <span className="text-xs text-zinc-500 font-medium">Siguiendo</span>
-            </div>
-
-            {/* Consejos Publicados */}
-            <div className="bg-zinc-950/60 border border-white/[0.04] p-3.5 rounded-xl text-center">
-              <div className="text-xl font-bold font-mono text-zinc-100">
-                {profile.totalPosts}
-              </div>
-              <span className="text-xs text-zinc-500 font-medium">Consejos</span>
-            </div>
-
-            {/* Likes Totales */}
-            <div className="bg-zinc-950/60 border border-white/[0.04] p-3.5 rounded-xl text-center">
-              <div className="text-xl font-bold font-mono text-red-400">
-                {profile.totalLikes}
-              </div>
-              <span className="text-xs text-zinc-500 font-medium">Likes recibidos</span>
-            </div>
-          </div>
+          {/* ── Estadísticas y Contadores Sociales Interactivos (Modal TikTok) ── */}
+          <ProfileFollowStats
+            userId={profile.id}
+            username={profile.username}
+            followersCount={profile.followersCount}
+            followingCount={profile.followingCount}
+            totalPosts={profile.totalPosts}
+            totalLikes={profile.totalLikes}
+            rank={profile.rank}
+            currentUserId={currentUserId}
+            mode="public"
+          />
         </div>
 
         {/* ── Feed de Publicaciones del Usuario ────────────────────────────── */}

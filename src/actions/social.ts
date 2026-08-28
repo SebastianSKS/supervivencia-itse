@@ -332,3 +332,128 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
     };
   });
 }
+
+export interface FollowUserItem {
+  id: number;
+  username: string;
+  rank: UserRank;
+  totalPosts: number;
+  totalLikes: number;
+  isFollowing: boolean;
+  isSelf: boolean;
+}
+
+/**
+ * Obtiene la lista de seguidores de un usuario (quiénes lo siguen)
+ */
+export async function getFollowers(targetUserId: number): Promise<FollowUserItem[]> {
+  const session = await getSession();
+  const currentUserId = session?.userId ?? -1;
+
+  const result = await db.execute({
+    sql: `
+      WITH user_stats AS (
+        SELECT
+          u.id AS user_id,
+          COUNT(DISTINCT p.id) AS total_posts,
+          COUNT(l.id)          AS total_likes
+        FROM users u
+        LEFT JOIN posts p ON u.id = p.user_id
+        LEFT JOIN likes l ON p.id = l.post_id
+        GROUP BY u.id
+      ),
+      viewer_follows AS (
+        SELECT following_id
+        FROM follows
+        WHERE follower_id = ?
+      )
+      SELECT
+        u.id,
+        u.username,
+        COALESCE(s.total_posts, 0) AS total_posts,
+        COALESCE(s.total_likes, 0) AS total_likes,
+        CASE WHEN vf.following_id IS NOT NULL THEN 1 ELSE 0 END AS is_following
+      FROM follows f
+      JOIN users u ON f.follower_id = u.id
+      LEFT JOIN user_stats s ON u.id = s.user_id
+      LEFT JOIN viewer_follows vf ON u.id = vf.following_id
+      WHERE f.following_id = ?
+      ORDER BY f.created_at DESC
+    `,
+    args: [currentUserId, targetUserId],
+  });
+
+  return result.rows.map((row) => {
+    const userId = Number(row.id);
+    const totalPosts = Number(row.total_posts || 0);
+    const totalLikes = Number(row.total_likes || 0);
+
+    return {
+      id: userId,
+      username: row.username as string,
+      rank: getUserRank(totalPosts, totalLikes),
+      totalPosts,
+      totalLikes,
+      isFollowing: Number(row.is_following) === 1,
+      isSelf: currentUserId === userId,
+    };
+  });
+}
+
+/**
+ * Obtiene la lista de usuarios a los que sigue un usuario
+ */
+export async function getFollowing(targetUserId: number): Promise<FollowUserItem[]> {
+  const session = await getSession();
+  const currentUserId = session?.userId ?? -1;
+
+  const result = await db.execute({
+    sql: `
+      WITH user_stats AS (
+        SELECT
+          u.id AS user_id,
+          COUNT(DISTINCT p.id) AS total_posts,
+          COUNT(l.id)          AS total_likes
+        FROM users u
+        LEFT JOIN posts p ON u.id = p.user_id
+        LEFT JOIN likes l ON p.id = l.post_id
+        GROUP BY u.id
+      ),
+      viewer_follows AS (
+        SELECT following_id
+        FROM follows
+        WHERE follower_id = ?
+      )
+      SELECT
+        u.id,
+        u.username,
+        COALESCE(s.total_posts, 0) AS total_posts,
+        COALESCE(s.total_likes, 0) AS total_likes,
+        CASE WHEN vf.following_id IS NOT NULL THEN 1 ELSE 0 END AS is_following
+      FROM follows f
+      JOIN users u ON f.following_id = u.id
+      LEFT JOIN user_stats s ON u.id = s.user_id
+      LEFT JOIN viewer_follows vf ON u.id = vf.following_id
+      WHERE f.follower_id = ?
+      ORDER BY f.created_at DESC
+    `,
+    args: [currentUserId, targetUserId],
+  });
+
+  return result.rows.map((row) => {
+    const userId = Number(row.id);
+    const totalPosts = Number(row.total_posts || 0);
+    const totalLikes = Number(row.total_likes || 0);
+
+    return {
+      id: userId,
+      username: row.username as string,
+      rank: getUserRank(totalPosts, totalLikes),
+      totalPosts,
+      totalLikes,
+      isFollowing: Number(row.is_following) === 1,
+      isSelf: currentUserId === userId,
+    };
+  });
+}
+
