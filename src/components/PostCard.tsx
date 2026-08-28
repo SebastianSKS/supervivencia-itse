@@ -2,7 +2,9 @@ import { formatDate } from '@/lib/utils';
 import LikeButton from './LikeButton';
 import RankBadge from './RankBadge';
 import ReportButton from './ReportButton';
+import FollowButton from './FollowButton';
 import type { Post } from '@/actions/posts';
+import Link from 'next/link';
 
 interface Props {
   post: Post;
@@ -11,20 +13,39 @@ interface Props {
 
 export default function PostCard({ post, currentUserId = null }: Props) {
   const initial = post.username.charAt(0).toUpperCase();
+  const isAuthor = currentUserId === post.user_id;
 
   return (
     <article className="group flex flex-col gap-4 bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-5 hover:bg-zinc-800/40 hover:border-white/10 transition-all duration-200">
 
-      {/* Header: avatar + autor + rango + fecha */}
+      {/* Header: avatar + autor link + rango + botón seguir + fecha */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/[0.08] flex items-center justify-center text-zinc-300 text-sm font-semibold shrink-0 select-none">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Link
+            href={`/user/${post.username}`}
+            className="w-8 h-8 rounded-full bg-zinc-800 border border-white/[0.08] hover:border-white/20 flex items-center justify-center text-zinc-300 text-sm font-semibold shrink-0 select-none transition-colors"
+          >
             {initial}
-          </div>
-          <div className="leading-none">
-            <div className="flex items-center gap-2">
-              <p className="text-zinc-200 text-sm font-medium">@{post.username}</p>
+          </Link>
+          <div className="leading-none min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link
+                href={`/user/${post.username}`}
+                className="text-zinc-200 text-sm font-medium hover:text-white hover:underline transition-colors truncate"
+              >
+                @{post.username}
+              </Link>
               <RankBadge rank={post.author_rank} size="sm" />
+
+              {/* Botón Seguir Inline */}
+              {!isAuthor && (
+                <FollowButton
+                  targetUserId={post.user_id}
+                  initialIsFollowing={Boolean(post.is_following_author)}
+                  variant="inline"
+                  currentUserId={currentUserId}
+                />
+              )}
             </div>
             <p className="text-zinc-600 text-xs mt-1">{formatDate(post.created_at)}</p>
           </div>

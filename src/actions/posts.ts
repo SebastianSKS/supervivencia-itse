@@ -19,28 +19,30 @@ export type Post = {
   author_likes: number;
   author_rank: UserRank;
   has_liked: boolean;
+  is_following_author?: boolean;
 };
 
 export type CreatePostState = { error?: string; success?: boolean } | null;
 
-// ─── Helper: mapear fila de BD → Post con Rango y Estado de Like ───────────────
+// ─── Helper: mapear fila de BD → Post con Rango, Likes y Follow ───────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToPost(row: any): Post {
   const authorPosts = Number(row.author_posts || 0);
   const authorLikes = Number(row.author_likes || 0);
 
   return {
-    id:           Number(row.id),
-    title:        row.title        as string,
-    content:      row.content      as string,
-    created_at:   row.created_at   as string,
-    user_id:      Number(row.user_id),
-    username:     row.username     as string,
-    like_count:   Number(row.like_count || 0),
-    author_posts: authorPosts,
-    author_likes: authorLikes,
-    author_rank:  getUserRank(authorPosts, authorLikes),
-    has_liked:    Boolean(row.has_liked === 1 || row.has_liked === true),
+    id:                  Number(row.id),
+    title:               row.title        as string,
+    content:             row.content      as string,
+    created_at:          row.created_at   as string,
+    user_id:             Number(row.user_id),
+    username:            row.username     as string,
+    like_count:          Number(row.like_count || 0),
+    author_posts:        authorPosts,
+    author_likes:        authorLikes,
+    author_rank:         getUserRank(authorPosts, authorLikes),
+    has_liked:           Number(row.has_liked) === 1,
+    is_following_author: Number(row.is_following_author) === 1,
   };
 }
 
@@ -71,15 +73,17 @@ export async function getPosts(): Promise<Post[]> {
         COUNT(DISTINCT l.id)                     AS like_count,
         COALESCE(s.total_posts, 0)               AS author_posts,
         COALESCE(s.total_likes, 0)               AS author_likes,
-        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked
+        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
+        MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author
       FROM posts p
-      LEFT JOIN users u      ON p.user_id = u.id
-      LEFT JOIN likes l      ON p.id = l.post_id
-      LEFT JOIN user_stats s ON p.user_id = s.user_id
+      LEFT JOIN users u        ON p.user_id = u.id
+      LEFT JOIN likes l        ON p.id = l.post_id
+      LEFT JOIN user_stats s   ON p.user_id = s.user_id
+      LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
       GROUP BY p.id
       ORDER BY p.created_at DESC
     `,
-    args: [currentUserId],
+    args: [currentUserId, currentUserId, currentUserId],
   });
 
   return result.rows.map(rowToPost);
@@ -109,7 +113,8 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
         COUNT(DISTINCT l.id)                     AS like_count,
         COALESCE(s.total_posts, 0)               AS author_posts,
         COALESCE(s.total_likes, 0)               AS author_likes,
-        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked
+        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
+        0 AS is_following_author
       FROM posts p
       LEFT JOIN users u      ON p.user_id = u.id
       LEFT JOIN likes l      ON p.id = l.post_id

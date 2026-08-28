@@ -15,6 +15,7 @@ export type ToggleLikeResult = {
  * - Requiere sesión activa.
  * - Regla 1: No permite dar like al propio consejo del autor.
  * - Regla 2: Si ya tiene like, lo elimina; si no, lo inserta respetando la restricción UNIQUE.
+ * - Genera una notificación de tipo 'like' al autor del post.
  */
 export async function toggleLike(postId: number): Promise<ToggleLikeResult> {
   const session = await getSession();
@@ -34,7 +35,8 @@ export async function toggleLike(postId: number): Promise<ToggleLikeResult> {
       return { error: 'El consejo no existe.' };
     }
 
-    if (Number(post.user_id) === session.userId) {
+    const authorId = Number(post.user_id);
+    if (authorId === session.userId) {
       return { error: 'No puedes darle like a tu propio consejo.' };
     }
 
@@ -62,6 +64,12 @@ export async function toggleLike(postId: number): Promise<ToggleLikeResult> {
         args: [postId, session.userId],
       });
 
+      // Crear alerta de notificación al autor
+      await db.execute({
+        sql: 'INSERT INTO notifications (user_id, actor_id, type, post_id) VALUES (?, ?, ?, ?)',
+        args: [authorId, session.userId, 'like', postId],
+      });
+
       revalidatePath('/wall');
       revalidatePath('/');
       revalidatePath('/profile');
@@ -70,7 +78,6 @@ export async function toggleLike(postId: number): Promise<ToggleLikeResult> {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : '';
     if (msg.includes('UNIQUE')) {
-      // En caso de concurrencia, ya tenía like
       return { success: true, liked: true };
     }
     return { error: 'Error al procesar el like. Intenta de nuevo.' };

@@ -22,6 +22,8 @@ export async function register(
     return { error: 'Todos los campos son obligatorios.' };
   if (username.length < 3)
     return { error: 'El username debe tener al menos 3 caracteres.' };
+  if (!/^[a-zA-Z0-9_.-]+$/.test(username))
+    return { error: 'El username solo puede contener letras, números, guiones y guiones bajos.' };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return { error: 'El email no es válido.' };
   if (password.length < 6)
@@ -30,6 +32,22 @@ export async function register(
     return { error: 'Las contraseñas no coinciden.' };
 
   try {
+    // 1. Verificación previa de unicidad para mensajes de error claros
+    const existingCheck = await db.execute({
+      sql: 'SELECT username, email FROM users WHERE username = ? OR email = ? LIMIT 1',
+      args: [username, email],
+    });
+
+    if (existingCheck.rows.length > 0) {
+      const existing = existingCheck.rows[0];
+      if (existing.username === username) {
+        return { error: 'El nombre de usuario ya está en uso. Por favor elige otro.' };
+      }
+      if (existing.email === email) {
+        return { error: 'Ese correo electrónico ya está registrado.' };
+      }
+    }
+
     const password_hash = await bcrypt.hash(password, 12);
 
     const result = await db.execute({
@@ -41,8 +59,9 @@ export async function register(
     await setSession({ userId, username, email, role: 'user' });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : '';
-    if (msg.includes('UNIQUE'))
-      return { error: 'Ese email o username ya está registrado.' };
+    if (msg.includes('UNIQUE')) {
+      return { error: 'El nombre de usuario o correo ya está en uso.' };
+    }
     return { error: 'Error al crear la cuenta. Intenta de nuevo.' };
   }
 
@@ -62,24 +81,28 @@ export async function login(
 
   try {
     const result = await db.execute({
-      sql: `SELECT * FROM users WHERE email = ? LIMIT 1`,
+      sql:  `SELECT id, username, email, password_hash, role FROM users WHERE email = ? LIMIT 1`,
       args: [email],
     });
 
     const user = result.rows[0];
-    if (!user) return { error: 'Credenciales incorrectas.' };
+    if (!user) {
+      return { error: 'Credenciales inválidas.' };
+    }
 
     const valid = await bcrypt.compare(password, user.password_hash as string);
-    if (!valid) return { error: 'Credenciales incorrectas.' };
+    if (!valid) {
+      return { error: 'Credenciales inválidas.' };
+    }
 
     await setSession({
       userId:   Number(user.id),
       username: user.username as string,
-      email:    user.email as string,
-      role:     user.role as 'user' | 'admin',
+      email:    user.email    as string,
+      role:     user.role     as 'user' | 'admin',
     });
   } catch {
-    return { error: 'Error del servidor. Intenta de nuevo.' };
+    return { error: 'Error en el servidor. Intenta de nuevo.' };
   }
 
   redirect('/');
