@@ -1,8 +1,11 @@
+'use client';
+
 /**
  * UserAvatar — Avatar dinámico con DiceBear (estilo "shapes")
  *
  * Genera siempre el mismo avatar para el mismo username (semilla determinista).
  * Si DiceBear no carga, muestra la inicial como fallback.
+ * Marcado como Client Component por el uso de onError (event handler del navegador).
  *
  * Uso:
  *   <UserAvatar username="mariela" size={32} className="rounded-full" />
