@@ -34,18 +34,18 @@ function rowToPost(row: any): Post {
 
   return {
     id:                  Number(row.id),
-    title:               row.title        as string,
-    content:             row.content      as string,
-    created_at:          row.created_at   as string,
-    user_id:             Number(row.user_id),
-    username:            row.username     as string,
+    title:               (row.title        as string) ?? '',
+    content:             (row.content      as string) ?? '',
+    created_at:          (row.created_at   as string) ?? '',
+    user_id:             Number(row.user_id ?? 0),
+    username:            (row.username     as string) ?? 'Usuario eliminado',
     like_count:          Number(row.like_count || 0),
     views:               Number(row.views || 0),
     author_posts:        authorPosts,
     author_likes:        authorLikes,
     author_rank:         getUserRank(authorPosts, authorLikes),
     has_liked:           Number(row.has_liked) === 1,
-    has_favorited:       Number(row.has_favorited) === 1,
+    has_favorited:       Number(row.has_favorited ?? 0) === 1,
     is_following_author: Number(row.is_following_author) === 1,
   };
 }
@@ -53,62 +53,109 @@ function rowToPost(row: any): Post {
 export type PostSortOption = 'random' | 'newest' | 'oldest' | 'popular';
 
 // ─── Todos los posts (El Muro con Algoritmo Aleatorio / Dinámico) ─────────────
+// BLINDADO con try/catch: si falla la BD (tabla faltante, columna, etc.)
+// devuelve [] en vez de lanzar un 500.
 export async function getPosts(sort?: string): Promise<Post[]> {
   const session = await getSession();
   const currentUserId = session?.userId ?? -1;
 
   // Lógica de ordenamiento dinámico: por defecto ALEATORIO (estilo TikTok/Facebook)
   let orderByClause = 'ORDER BY RANDOM()';
+  if (sort === 'newest')  orderByClause = 'ORDER BY p.created_at DESC';
+  else if (sort === 'oldest')  orderByClause = 'ORDER BY p.created_at ASC';
+  else if (sort === 'popular') orderByClause = 'ORDER BY like_count DESC, p.created_at DESC';
+  else if (sort === 'random')  orderByClause = 'ORDER BY RANDOM()';
 
-  if (sort === 'newest') {
-    orderByClause = 'ORDER BY p.created_at DESC';
-  } else if (sort === 'oldest') {
-    orderByClause = 'ORDER BY p.created_at ASC';
-  } else if (sort === 'popular') {
-    orderByClause = 'ORDER BY like_count DESC, p.created_at DESC';
-  } else if (sort === 'random') {
-    orderByClause = 'ORDER BY RANDOM()';
-  }
-
-  const result = await db.execute({
-    sql: `
-      WITH user_stats AS (
+  // ── Intentar con favorites JOIN (requiere tabla favorites) ──────────────────
+  try {
+    const result = await db.execute({
+      sql: `
+        WITH user_stats AS (
+          SELECT
+            u.id AS user_id,
+            COUNT(DISTINCT p_sub.id) AS total_posts,
+            COUNT(l_sub.id)          AS total_likes
+          FROM users u
+          LEFT JOIN posts p_sub ON u.id = p_sub.user_id
+          LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
+          GROUP BY u.id
+        )
         SELECT
-          u.id AS user_id,
-          COUNT(DISTINCT p_sub.id) AS total_posts,
-          COUNT(l_sub.id)          AS total_likes
-        FROM users u
-        LEFT JOIN posts p_sub ON u.id = p_sub.user_id
-        LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
-        GROUP BY u.id
-      )
-      SELECT
-        p.id,
-        p.title,
-        p.content,
-        COALESCE(p.views, 0)                     AS views,
-        p.created_at,
-        p.user_id,
-        COALESCE(u.username, 'Usuario eliminado') AS username,
-        COUNT(DISTINCT l.id)                     AS like_count,
-        COALESCE(s.total_posts, 0)               AS author_posts,
-        COALESCE(s.total_likes, 0)               AS author_likes,
-        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
-        MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author,
-        MAX(CASE WHEN fav.user_id = ? THEN 1 ELSE 0 END) AS has_favorited
-      FROM posts p
-      LEFT JOIN users u        ON p.user_id = u.id
-      LEFT JOIN likes l        ON p.id = l.post_id
-      LEFT JOIN user_stats s   ON p.user_id = s.user_id
-      LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
-      LEFT JOIN favorites fav  ON p.id = fav.post_id AND fav.user_id = ?
-      GROUP BY p.id
-      ${orderByClause}
-    `,
-    args: [currentUserId, currentUserId, currentUserId, currentUserId, currentUserId],
-  });
+          p.id,
+          p.title,
+          p.content,
+          COALESCE(p.views, 0)                     AS views,
+          p.created_at,
+          p.user_id,
+          COALESCE(u.username, 'Usuario eliminado') AS username,
+          COUNT(DISTINCT l.id)                     AS like_count,
+          COALESCE(s.total_posts, 0)               AS author_posts,
+          COALESCE(s.total_likes, 0)               AS author_likes,
+          MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
+          MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author,
+          MAX(CASE WHEN fav.user_id = ? THEN 1 ELSE 0 END) AS has_favorited
+        FROM posts p
+        LEFT JOIN users u        ON p.user_id = u.id
+        LEFT JOIN likes l        ON p.id = l.post_id
+        LEFT JOIN user_stats s   ON p.user_id = s.user_id
+        LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
+        LEFT JOIN favorites fav  ON p.id = fav.post_id AND fav.user_id = ?
+        GROUP BY p.id
+        ${orderByClause}
+      `,
+      args: [currentUserId, currentUserId, currentUserId, currentUserId, currentUserId],
+    });
+    return result.rows.map(rowToPost);
+  } catch (primaryErr: unknown) {
+    const msg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
+    console.error('[getPosts] Error con favorites JOIN — intentando fallback sin favorites:', msg);
 
-  return result.rows.map(rowToPost);
+    // ── Fallback: query sin favorites (compatibilidad si la tabla no existe) ──
+    try {
+      const result = await db.execute({
+        sql: `
+          WITH user_stats AS (
+            SELECT
+              u.id AS user_id,
+              COUNT(DISTINCT p_sub.id) AS total_posts,
+              COUNT(l_sub.id)          AS total_likes
+            FROM users u
+            LEFT JOIN posts p_sub ON u.id = p_sub.user_id
+            LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
+            GROUP BY u.id
+          )
+          SELECT
+            p.id,
+            p.title,
+            p.content,
+            COALESCE(p.views, 0)                     AS views,
+            p.created_at,
+            p.user_id,
+            COALESCE(u.username, 'Usuario eliminado') AS username,
+            COUNT(DISTINCT l.id)                     AS like_count,
+            COALESCE(s.total_posts, 0)               AS author_posts,
+            COALESCE(s.total_likes, 0)               AS author_likes,
+            MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
+            MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author,
+            0 AS has_favorited
+          FROM posts p
+          LEFT JOIN users u        ON p.user_id = u.id
+          LEFT JOIN likes l        ON p.id = l.post_id
+          LEFT JOIN user_stats s   ON p.user_id = s.user_id
+          LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
+          GROUP BY p.id
+          ${orderByClause}
+        `,
+        args: [currentUserId, currentUserId, currentUserId],
+      });
+      console.warn('[getPosts] Fallback OK — la tabla favorites no existe aún en esta BD.');
+      return result.rows.map(rowToPost);
+    } catch (fallbackErr: unknown) {
+      const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+      console.error('[getPosts] Fallback también falló:', fallbackMsg);
+      return []; // Nunca lanzar — devolver array vacío para no romper la página
+    }
+  }
 }
 
 // ─── Incrementar contador de vistas de un post ────────────────────────────────
@@ -125,43 +172,48 @@ export async function incrementViews(postId: number): Promise<void> {
 
 // ─── Posts del usuario actual (Perfil) ────────────────────────────────────────
 export async function getMyPosts(userId: number): Promise<Post[]> {
-  const result = await db.execute({
-    sql: `
-      WITH user_stats AS (
+  try {
+    const result = await db.execute({
+      sql: `
+        WITH user_stats AS (
+          SELECT
+            u.id AS user_id,
+            COUNT(DISTINCT p_sub.id) AS total_posts,
+            COUNT(l_sub.id)          AS total_likes
+          FROM users u
+          LEFT JOIN posts p_sub ON u.id = p_sub.user_id
+          LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
+          GROUP BY u.id
+        )
         SELECT
-          u.id AS user_id,
-          COUNT(DISTINCT p_sub.id) AS total_posts,
-          COUNT(l_sub.id)          AS total_likes
-        FROM users u
-        LEFT JOIN posts p_sub ON u.id = p_sub.user_id
-        LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
-        GROUP BY u.id
-      )
-      SELECT
-        p.id,
-        p.title,
-        p.content,
-        COALESCE(p.views, 0)                     AS views,
-        p.created_at,
-        p.user_id,
-        COALESCE(u.username, 'Usuario eliminado') AS username,
-        COUNT(DISTINCT l.id)                     AS like_count,
-        COALESCE(s.total_posts, 0)               AS author_posts,
-        COALESCE(s.total_likes, 0)               AS author_likes,
-        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
-        0 AS is_following_author
-      FROM posts p
-      LEFT JOIN users u      ON p.user_id = u.id
-      LEFT JOIN likes l      ON p.id = l.post_id
-      LEFT JOIN user_stats s ON p.user_id = s.user_id
-      WHERE p.user_id = ?
-      GROUP BY p.id
-      ORDER BY p.created_at DESC
-    `,
-    args: [userId, userId],
-  });
-
-  return result.rows.map(rowToPost);
+          p.id,
+          p.title,
+          p.content,
+          COALESCE(p.views, 0)                     AS views,
+          p.created_at,
+          p.user_id,
+          COALESCE(u.username, 'Usuario eliminado') AS username,
+          COUNT(DISTINCT l.id)                     AS like_count,
+          COALESCE(s.total_posts, 0)               AS author_posts,
+          COALESCE(s.total_likes, 0)               AS author_likes,
+          MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
+          0 AS is_following_author,
+          0 AS has_favorited
+        FROM posts p
+        LEFT JOIN users u      ON p.user_id = u.id
+        LEFT JOIN likes l      ON p.id = l.post_id
+        LEFT JOIN user_stats s ON p.user_id = s.user_id
+        WHERE p.user_id = ?
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+      `,
+      args: [userId, userId],
+    });
+    return result.rows.map(rowToPost);
+  } catch (err: unknown) {
+    console.error('[getMyPosts] Error:', err instanceof Error ? err.message : err);
+    return [];
+  }
 }
 
 // ─── Obtener estadísticas de un usuario específico ────────────────────────────
@@ -172,35 +224,34 @@ export async function getUserStats(userId: number): Promise<{
   followingCount: number;
   rank: UserRank;
 }> {
-  const result = await db.execute({
-    sql: `
-      SELECT
-        COUNT(DISTINCT p.id) AS total_posts,
-        COUNT(DISTINCT l.id) AS total_likes,
-        (SELECT COUNT(*) FROM follows WHERE following_id = ?) AS followers_count,
-        (SELECT COUNT(*) FROM follows WHERE follower_id = ?)  AS following_count
-      FROM users u
-      LEFT JOIN posts p ON u.id = p.user_id
-      LEFT JOIN likes l ON p.id = l.post_id
-      WHERE u.id = ?
-      GROUP BY u.id
-    `,
-    args: [userId, userId, userId],
-  });
+  try {
+    const result = await db.execute({
+      sql: `
+        SELECT
+          COUNT(DISTINCT p.id) AS total_posts,
+          COUNT(DISTINCT l.id) AS total_likes,
+          (SELECT COUNT(*) FROM follows WHERE following_id = ?) AS followers_count,
+          (SELECT COUNT(*) FROM follows WHERE follower_id = ?)  AS following_count
+        FROM users u
+        LEFT JOIN posts p ON u.id = p.user_id
+        LEFT JOIN likes l ON p.id = l.post_id
+        WHERE u.id = ?
+        GROUP BY u.id
+      `,
+      args: [userId, userId, userId],
+    });
 
-  const row = result.rows[0];
-  const totalPosts = Number(row?.total_posts || 0);
-  const totalLikes = Number(row?.total_likes || 0);
-  const followersCount = Number(row?.followers_count || 0);
-  const followingCount = Number(row?.following_count || 0);
+    const row = result.rows[0];
+    const totalPosts    = Number(row?.total_posts    || 0);
+    const totalLikes    = Number(row?.total_likes    || 0);
+    const followersCount = Number(row?.followers_count || 0);
+    const followingCount = Number(row?.following_count || 0);
 
-  return {
-    totalPosts,
-    totalLikes,
-    followersCount,
-    followingCount,
-    rank: getUserRank(totalPosts, totalLikes),
-  };
+    return { totalPosts, totalLikes, followersCount, followingCount, rank: getUserRank(totalPosts, totalLikes) };
+  } catch (err: unknown) {
+    console.error('[getUserStats] Error:', err instanceof Error ? err.message : err);
+    return { totalPosts: 0, totalLikes: 0, followersCount: 0, followingCount: 0, rank: getUserRank(0, 0) };
+  }
 }
 
 // ─── Validaciones comunes ─────────────────────────────────────────────────────

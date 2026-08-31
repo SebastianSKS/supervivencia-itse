@@ -3,7 +3,7 @@ import PostCard from '@/components/PostCard';
 import PostSortSelector from '@/components/PostSortSelector';
 import { getSession } from '@/lib/auth';
 import { getPosts } from '@/actions/posts';
-import { ArrowDown, LayoutGrid, PenSquare } from 'lucide-react';
+import { ArrowDown, LayoutGrid, PenSquare, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,20 @@ interface Props {
 
 export default async function HomePage({ searchParams }: Props) {
   const { sort } = await searchParams;
-  const [session, posts] = await Promise.all([getSession(), getPosts(sort)]);
+
+  let session = null;
+  let posts: Awaited<ReturnType<typeof getPosts>> = [];
+  let loadError: string | null = null;
+
+  try {
+    [session, posts] = await Promise.all([getSession(), getPosts(sort)]);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[HomePage] Error al cargar datos:', msg);
+    loadError = msg;
+    // Intentar al menos obtener la sesión para mostrar el Navbar correctamente
+    try { session = await getSession(); } catch { /* ignorar */ }
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -93,8 +106,15 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         </div>
 
-        {/* Grid de posts responsive */}
-        {posts.length === 0 ? (
+        {/* ── Error amigable si todo falló ───────────────────────────────────── */}
+        {loadError ? (
+          <div className="flex flex-col items-center justify-center py-16 border border-red-500/10 bg-red-500/5 rounded-2xl px-4 text-center">
+            <AlertTriangle className="w-8 h-8 text-red-400/60 mb-3" />
+            <p className="text-zinc-400 font-medium text-sm">Hubo un problema al cargar el muro</p>
+            <p className="text-zinc-600 text-xs mt-1 font-mono break-all max-w-md">{loadError}</p>
+            <p className="text-zinc-600 text-xs mt-3">Intenta recargar la página o espera un momento.</p>
+          </div>
+        ) : posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 sm:py-24 border border-dashed border-white/[0.06] rounded-2xl w-full px-4 text-center">
             <LayoutGrid className="w-10 h-10 text-zinc-800 mb-3" />
             <p className="text-zinc-500 font-medium text-sm">No se encontraron consejos</p>
