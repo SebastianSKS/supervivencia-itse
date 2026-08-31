@@ -115,6 +115,18 @@ const migrations = [
     `,
   },
   {
+    name: 'favorites',
+    sql: `
+      CREATE TABLE IF NOT EXISTS favorites (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        post_id    INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(user_id, post_id)
+      )
+    `,
+  },
+  {
     name: 'index: posts.user_id',
     sql: `CREATE INDEX IF NOT EXISTS idx_posts_user_id   ON posts(user_id)`,
   },

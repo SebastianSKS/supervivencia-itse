@@ -4,6 +4,7 @@ import RankBadge from './RankBadge';
 import ReportButton from './ReportButton';
 import FollowButton from './FollowButton';
 import ViewTracker from './ViewTracker';
+import BookmarkButton from './BookmarkButton';
 import type { Post } from '@/actions/posts';
 import Link from 'next/link';
 
@@ -63,7 +64,7 @@ export default function PostCard({ post, currentUserId = null }: Props) {
         </p>
       </div>
 
-      {/* Footer: like button + radar de vistas + botón reportar */}
+      {/* Footer: like button + radar de vistas (izq) y bookmark + reportar (der) */}
       <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <LikeButton
@@ -76,11 +77,18 @@ export default function PostCard({ post, currentUserId = null }: Props) {
           <ViewTracker postId={post.id} initialViews={post.views} />
         </div>
 
-        <ReportButton
-          postId={post.id}
-          authorId={post.user_id}
-          currentUserId={currentUserId}
-        />
+        <div className="flex items-center gap-1">
+          <BookmarkButton
+            postId={post.id}
+            initialIsFavorited={Boolean(post.has_favorited)}
+            currentUserId={currentUserId}
+          />
+          <ReportButton
+            postId={post.id}
+            authorId={post.user_id}
+            currentUserId={currentUserId}
+          />
+        </div>
       </div>
 
     </article>

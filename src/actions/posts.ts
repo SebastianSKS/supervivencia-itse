@@ -20,12 +20,13 @@ export type Post = {
   author_likes: number;
   author_rank: UserRank;
   has_liked: boolean;
+  has_favorited?: boolean;
   is_following_author?: boolean;
 };
 
 export type CreatePostState = { error?: string; success?: boolean } | null;
 
-// ─── Helper: mapear fila de BD → Post con Rango, Likes, Views y Follow ───────
+// ─── Helper: mapear fila de BD → Post con Rango, Likes, Views, Favoritos y Follow ─
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToPost(row: any): Post {
   const authorPosts = Number(row.author_posts || 0);
@@ -44,6 +45,7 @@ function rowToPost(row: any): Post {
     author_likes:        authorLikes,
     author_rank:         getUserRank(authorPosts, authorLikes),
     has_liked:           Number(row.has_liked) === 1,
+    has_favorited:       Number(row.has_favorited) === 1,
     is_following_author: Number(row.is_following_author) === 1,
   };
 }
@@ -92,16 +94,18 @@ export async function getPosts(sort?: string): Promise<Post[]> {
         COALESCE(s.total_posts, 0)               AS author_posts,
         COALESCE(s.total_likes, 0)               AS author_likes,
         MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
-        MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author
+        MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author,
+        MAX(CASE WHEN fav.user_id = ? THEN 1 ELSE 0 END) AS has_favorited
       FROM posts p
       LEFT JOIN users u        ON p.user_id = u.id
       LEFT JOIN likes l        ON p.id = l.post_id
       LEFT JOIN user_stats s   ON p.user_id = s.user_id
       LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
+      LEFT JOIN favorites fav  ON p.id = fav.post_id AND fav.user_id = ?
       GROUP BY p.id
       ${orderByClause}
     `,
-    args: [currentUserId, currentUserId, currentUserId],
+    args: [currentUserId, currentUserId, currentUserId, currentUserId, currentUserId],
   });
 
   return result.rows.map(rowToPost);

@@ -2,20 +2,19 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { logout } from '@/actions/auth';
 import { getMyPosts, getUserStats } from '@/actions/posts';
+import { getFavoritePosts } from '@/actions/favorites';
 import { getRankProgress, RANKS_CODEX } from '@/lib/ranks';
 import UpdateUsernameForm from './UpdateUsernameForm';
-import MyPostCard from '@/components/MyPostCard';
 import Navbar from '@/components/Navbar';
 import RankBadge from '@/components/RankBadge';
 import ProfileFollowStats from '@/components/ProfileFollowStats';
+import ProfileTabs from '@/components/ProfileTabs';
 import {
   User,
   Shield,
   Calendar,
   LogOut,
   Crown,
-  LayoutGrid,
-  PenSquare,
   Heart,
   Award,
   Zap,
@@ -32,8 +31,9 @@ export default async function ProfilePage() {
   const session = await getSession();
   if (!session) redirect('/login');
 
-  const [myPosts, userStats] = await Promise.all([
+  const [myPosts, favoritePosts, userStats] = await Promise.all([
     getMyPosts(session.userId),
+    getFavoritePosts(session.userId),
     getUserStats(session.userId),
   ]);
 
@@ -132,41 +132,42 @@ export default async function ProfilePage() {
                 style={{ width: `${progress.percentage}%` }}
               />
             </div>
+
+            {/* Marcadores de nivel */}
+            <div className="flex justify-between items-center text-[10px] text-zinc-600 mt-1.5 px-0.5 font-mono">
+              <span>Recluta (0)</span>
+              <span>Estudiante (1)</span>
+              <span>Veterano (3)</span>
+              <span className="text-amber-400/80">Leyenda (10)</span>
+            </div>
           </div>
         </div>
 
         {/* ── Códice de Rangos (Guía de Logros) ─────────────────────────────── */}
         <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <Award className="w-4 h-4 text-zinc-400" />
-            <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">
+            <BookOpen className="w-4 h-4 text-zinc-400" />
+            <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
               Guía de Rangos y Logros
             </h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {RANKS_CODEX.map((rank) => {
-              const isCurrent = userStats.rank === rank.id;
+              const isCurrent = userStats.rank === rank.name;
 
               return (
                 <div
-                  key={rank.id}
+                  key={rank.name}
                   className={`p-4 rounded-xl border transition-all ${
                     isCurrent
-                      ? rank.id === 'Leyenda'
-                        ? 'bg-amber-950/20 border-amber-500/40 shadow-sm shadow-amber-500/10'
-                        : rank.id === 'Veterano'
-                        ? 'bg-cyan-950/20 border-cyan-500/40 shadow-sm shadow-cyan-500/10'
-                        : 'bg-zinc-800/60 border-zinc-500/40 shadow-sm'
-                      : 'bg-zinc-900/30 border-white/[0.04] opacity-50 grayscale hover:opacity-75 hover:grayscale-0'
+                      ? 'bg-zinc-800/80 border-white/20 shadow-sm'
+                      : 'bg-zinc-950/40 border-white/[0.04] opacity-50 hover:opacity-75'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      {rank.id === 'Leyenda' && <Star className="w-4 h-4 text-amber-400 fill-amber-400" />}
-                      {rank.id === 'Veterano' && <ShieldCheck className="w-4 h-4 text-cyan-400" />}
-                      {rank.id === 'Estudiante' && <BookOpen className="w-4 h-4 text-zinc-300" />}
-                      {rank.id === 'Recluta' && <User className="w-4 h-4 text-zinc-400" />}
+                      <span className="text-base">{rank.icon}</span>
                       <span className="font-bold text-sm text-zinc-100">{rank.name}</span>
                     </div>
 
@@ -199,7 +200,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* ── Cerrar sesión ─────────────────────────────────────────────────── */}
-        <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 mb-10">
+        <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 mb-8">
           <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
             Sesión
           </h3>
@@ -214,47 +215,12 @@ export default async function ProfilePage() {
           </form>
         </div>
 
-        {/* ── Mis Consejos ──────────────────────────────────────────────────── */}
-        <div>
-          {/* Encabezado sección */}
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2.5">
-              <LayoutGrid className="w-4 h-4 text-zinc-500" />
-              <h2 className="text-base font-bold text-zinc-100">Mis Consejos Publicados</h2>
-              <span className="text-zinc-600 text-sm">({myPosts.length})</span>
-            </div>
-            <Link
-              href="/publicar"
-              className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:border-white/20 bg-zinc-900/40 px-3 py-1.5 rounded-lg transition-all"
-            >
-              <PenSquare className="w-3.5 h-3.5" />
-              + Nuevo
-            </Link>
-          </div>
-
-          {/* Grid de mis posts */}
-          {myPosts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-14 border border-dashed border-white/[0.06] rounded-2xl">
-              <LayoutGrid className="w-9 h-9 text-zinc-800 mb-3" />
-              <p className="text-zinc-500 text-sm font-medium">Aún no has publicado nada</p>
-              <p className="text-zinc-600 text-xs mt-1 mb-4">
-                Comparte tu experiencia con los de primer semestre
-              </p>
-              <Link
-                href="/publicar"
-                className="text-xs font-semibold text-zinc-900 bg-zinc-100 hover:bg-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Publicar mi primer consejo
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {myPosts.map(post => (
-                <MyPostCard key={post.id} post={post} currentUserId={session.userId} />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* ── Pestañas: Mis Consejos & Favoritos ────────────────────────────── */}
+        <ProfileTabs
+          myPosts={myPosts}
+          favoritePosts={favoritePosts}
+          currentUserId={session.userId}
+        />
 
       </main>
     </div>
