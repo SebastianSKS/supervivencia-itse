@@ -31,11 +31,34 @@ export default async function ProfilePage() {
   const session = await getSession();
   if (!session) redirect('/login');
 
-  const [myPosts, favoritePosts, userStats] = await Promise.all([
-    getMyPosts(session.userId),
-    getFavoritePosts(session.userId),
-    getUserStats(session.userId),
-  ]);
+  let myPosts: Awaited<ReturnType<typeof getMyPosts>> = [];
+  let favoritePosts: Awaited<ReturnType<typeof getFavoritePosts>> = [];
+  let userStats: Awaited<ReturnType<typeof getUserStats>> | null = null;
+  let loadError: string | null = null;
+
+  try {
+    [myPosts, favoritePosts, userStats] = await Promise.all([
+      getMyPosts(session.userId),
+      getFavoritePosts(session.userId),
+      getUserStats(session.userId),
+    ]);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[ProfilePage] Error al cargar datos:', msg);
+    loadError = msg;
+  }
+
+  if (loadError || !userStats) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="bg-zinc-900/60 border border-red-500/20 rounded-2xl p-8 max-w-md text-center">
+          <p className="text-red-400 font-semibold mb-2">Error al cargar el perfil</p>
+          <p className="text-zinc-500 text-sm font-mono break-all">{loadError}</p>
+          <p className="text-zinc-600 text-xs mt-4">Revisa los logs de Vercel para más detalles.</p>
+        </div>
+      </div>
+    );
+  }
 
   const isAdmin = session.role === 'admin';
   const progress = getRankProgress(userStats.totalPosts, userStats.totalLikes);
