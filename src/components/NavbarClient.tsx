@@ -16,6 +16,7 @@ import {
   X,
   PenSquare,
   Search,
+  Trophy,
 } from 'lucide-react';
 import Link from 'next/link';
 import { logout } from '@/actions/auth';
@@ -52,6 +53,15 @@ export default function NavbarClient({ session, notifications, unreadCount }: Pr
           >
             <LayoutGrid className="w-3.5 h-3.5" />
             <span>El Muro</span>
+          </Link>
+
+          {/* Link Desktop a Ranking */}
+          <Link
+            href="/ranking"
+            className="hidden md:flex items-center gap-1.5 text-xs sm:text-sm text-zinc-400 hover:text-amber-400 transition-colors"
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            <span>Ranking</span>
           </Link>
         </div>
 
@@ -174,6 +184,20 @@ export default function NavbarClient({ session, notifications, unreadCount }: Pr
               </div>
               <span className="text-[10px] uppercase font-bold text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded">
                 Feed
+              </span>
+            </Link>
+
+            <Link
+              href="/ranking"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between p-3 rounded-xl text-sm font-medium text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Trophy className="w-4 h-4 text-amber-400" />
+                <span>Salón de la Fama</span>
+              </div>
+              <span className="text-[10px] uppercase font-bold text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded">
+                Top 10
               </span>
             </Link>
 
