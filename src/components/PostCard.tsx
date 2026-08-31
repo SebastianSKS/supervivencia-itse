@@ -5,6 +5,7 @@ import ReportButton from './ReportButton';
 import FollowButton from './FollowButton';
 import ViewTracker from './ViewTracker';
 import BookmarkButton from './BookmarkButton';
+import UserAvatar from './UserAvatar';
 import type { Post } from '@/actions/posts';
 import Link from 'next/link';
 
@@ -14,7 +15,6 @@ interface Props {
 }
 
 export default function PostCard({ post, currentUserId = null }: Props) {
-  const initial = post.username.charAt(0).toUpperCase();
   const isAuthor = currentUserId === post.user_id;
 
   return (
@@ -25,9 +25,9 @@ export default function PostCard({ post, currentUserId = null }: Props) {
         <div className="flex items-center gap-2.5 min-w-0">
           <Link
             href={`/user/${post.username}`}
-            className="w-8 h-8 rounded-full bg-zinc-800 border border-white/[0.08] hover:border-white/20 flex items-center justify-center text-zinc-300 text-sm font-semibold shrink-0 select-none transition-colors"
+            className="rounded-full bg-zinc-800 border border-white/[0.08] hover:border-white/20 shrink-0 transition-colors overflow-hidden"
           >
-            {initial}
+            <UserAvatar username={post.username} size={32} className="rounded-full" />
           </Link>
           <div className="leading-none min-w-0">
             <div className="flex items-center gap-2 flex-wrap">

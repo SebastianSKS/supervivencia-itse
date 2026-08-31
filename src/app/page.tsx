@@ -21,7 +21,17 @@ export default async function HomePage({ searchParams }: Props) {
       <Navbar />
 
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
-      <section className="flex flex-col items-center text-center px-4 pt-14 sm:pt-20 pb-10 sm:pb-14">
+      <section className="relative flex flex-col items-center text-center px-4 pt-14 sm:pt-20 pb-10 sm:pb-14 overflow-hidden bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(6,182,212,0.12),transparent)]">
+        {/* Grid decorativo sutil */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
         <div className="inline-flex items-center gap-2 text-xs font-medium text-zinc-400 border border-white/10 bg-zinc-900/60 px-3 py-1.5 rounded-full mb-6 sm:mb-8">
           <LayoutGrid className="w-3.5 h-3.5 text-cyan-400" />
           <span>Foro de la comunidad ITSE</span>

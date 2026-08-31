@@ -5,6 +5,7 @@ import type { SessionPayload } from '@/lib/auth';
 import type { NotificationItem } from '@/actions/social';
 import UserSearchInput from './UserSearchInput';
 import NotificationsDropdown from './NotificationsDropdown';
+import UserAvatar from './UserAvatar';
 import {
   Shield,
   LayoutGrid,
@@ -199,8 +200,8 @@ export default function NavbarClient({ session, notifications, unreadCount }: Pr
                   className="flex items-center justify-between p-3 rounded-xl bg-zinc-950/60 border border-white/[0.06] text-sm text-zinc-200"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center font-bold text-xs text-zinc-300">
-                      {session.username.charAt(0).toUpperCase()}
+                    <div className="rounded-full bg-zinc-800 border border-white/10 overflow-hidden shrink-0">
+                      <UserAvatar username={session.username} size={32} className="rounded-full" />
                     </div>
                     <div>
                       <p className="font-bold text-xs text-zinc-100">@{session.username}</p>

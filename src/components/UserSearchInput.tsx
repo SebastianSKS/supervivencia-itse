@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, User, Loader2, X } from 'lucide-react';
 import { searchUsers, UserSearchResult } from '@/actions/social';
 import RankBadge from './RankBadge';
+import UserAvatar from './UserAvatar';
 import Link from 'next/link';
 
 export default function UserSearchInput() {
@@ -99,8 +100,8 @@ export default function UserSearchInput() {
                   className="flex items-center justify-between p-2.5 hover:bg-zinc-800/50 transition-colors group"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-zinc-300 text-xs font-semibold shrink-0">
-                      {u.username.charAt(0).toUpperCase()}
+                    <div className="rounded-full bg-zinc-800 border border-white/10 shrink-0 overflow-hidden">
+                      <UserAvatar username={u.username} size={24} className="rounded-full" />
                     </div>
                     <div className="truncate">
                       <span className="text-xs font-medium text-zinc-200 group-hover:text-white truncate block">

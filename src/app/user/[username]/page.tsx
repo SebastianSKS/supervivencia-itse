@@ -5,6 +5,7 @@ import PostCard from '@/components/PostCard';
 import RankBadge from '@/components/RankBadge';
 import FollowButton from '@/components/FollowButton';
 import ProfileFollowStats from '@/components/ProfileFollowStats';
+import UserAvatar from '@/components/UserAvatar';
 import { notFound } from 'next/navigation';
 import {
   User,
@@ -61,14 +62,14 @@ export default async function UserProfilePage({ params }: Props) {
             <div className="flex items-center gap-5">
               {/* Avatar */}
               <div
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl sm:text-3xl font-black border select-none"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 overflow-hidden border"
                 style={{
-                  background: isAdmin ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.04)',
                   borderColor: isAdmin ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.08)',
-                  color: isAdmin ? '#fbbf24' : '#e4e4e7',
+                  background: isAdmin ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.04)',
                 }}
               >
-                {profile.username.charAt(0).toUpperCase()}
+                {/* 80px (sm) es el tamaño máximo, DiceBear escala perfecto */}
+                <UserAvatar username={profile.username} size={80} className="rounded-2xl w-full h-full" />
               </div>
 
               {/* Info y Rango */}

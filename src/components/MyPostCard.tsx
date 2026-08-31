@@ -3,6 +3,7 @@ import { deleteMyPost } from '@/actions/user';
 import LikeButton from './LikeButton';
 import RankBadge from './RankBadge';
 import ViewTracker from './ViewTracker';
+import UserAvatar from './UserAvatar';
 import { Trash2 } from 'lucide-react';
 import type { Post } from '@/actions/posts';
 
@@ -16,7 +17,6 @@ interface Props {
  * Incluye botón de eliminar con validación de ownership en el servidor, badge de rango y vistas.
  */
 export default function MyPostCard({ post, currentUserId = null }: Props) {
-  const initial = post.username.charAt(0).toUpperCase();
 
   return (
     <article className="group flex flex-col gap-4 bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-4 sm:p-5 hover:bg-zinc-800/40 hover:border-white/10 transition-all duration-200">
@@ -24,8 +24,8 @@ export default function MyPostCard({ post, currentUserId = null }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/[0.08] flex items-center justify-center text-zinc-300 text-sm font-semibold shrink-0 select-none">
-            {initial}
+          <div className="rounded-full bg-zinc-800 border border-white/[0.08] shrink-0 overflow-hidden">
+            <UserAvatar username={post.username} size={32} className="rounded-full" />
           </div>
           <div className="leading-none">
             <div className="flex items-center gap-2">

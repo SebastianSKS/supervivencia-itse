@@ -8,6 +8,7 @@ import {
 } from '@/actions/social';
 import RankBadge from './RankBadge';
 import FollowButton from './FollowButton';
+import UserAvatar from './UserAvatar';
 import { X, Users, UserCheck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -170,8 +171,8 @@ export default function FollowListModal({
                   onClick={onClose}
                   className="flex items-center gap-3 min-w-0 flex-1 group"
                 >
-                  <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/10 group-hover:border-cyan-400/40 flex items-center justify-center text-zinc-200 text-xs font-bold shrink-0 transition-colors select-none">
-                    {u.username.charAt(0).toUpperCase()}
+                  <div className="rounded-full bg-zinc-800 border border-white/10 group-hover:border-cyan-400/40 shrink-0 overflow-hidden transition-colors">
+                    <UserAvatar username={u.username} size={36} className="rounded-full" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap leading-tight">

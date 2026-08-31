@@ -9,6 +9,7 @@ import Navbar from '@/components/Navbar';
 import RankBadge from '@/components/RankBadge';
 import ProfileFollowStats from '@/components/ProfileFollowStats';
 import ProfileTabs from '@/components/ProfileTabs';
+import UserAvatar from '@/components/UserAvatar';
 import {
   User,
   Shield,
@@ -80,14 +81,13 @@ export default async function ProfilePage() {
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div
-              className="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-black border"
+              className="w-16 h-16 rounded-2xl shrink-0 overflow-hidden border"
               style={{
-                background: isAdmin ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.04)',
                 borderColor: isAdmin ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.08)',
-                color: isAdmin ? '#fbbf24' : '#e4e4e7',
+                background: isAdmin ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.04)',
               }}
             >
-              {session.username.charAt(0).toUpperCase()}
+              <UserAvatar username={session.username} size={64} className="rounded-2xl" />
             </div>
 
             {/* Info Principal */}
