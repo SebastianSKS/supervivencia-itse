@@ -66,8 +66,10 @@ export async function getFavoritePosts(userId: number): Promise<Post[]> {
         WITH user_stats AS (
           SELECT
             u.id AS user_id,
-            COUNT(DISTINCT p_sub.id) AS total_posts,
-            COUNT(l_sub.id)          AS total_likes
+            u.manual_posts,
+              u.manual_likes,
+              COUNT(DISTINCT p_sub.id) AS raw_posts,
+              COUNT(l_sub.id)          AS raw_likes
           FROM users u
           LEFT JOIN posts p_sub ON u.id = p_sub.user_id
           LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id

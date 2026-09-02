@@ -176,24 +176,39 @@ export async function getUserPublicProfile(username: string): Promise<PublicUser
   // 2. Obtener los posts del usuario con estado de likes para el usuario actual
   const postsRes = await db.execute({
     sql: `
-      SELECT
-        p.id,
-        p.title,
-        p.content,
-        p.category,
-        COALESCE(p.views, 0)                     AS views,
-        p.created_at,
-        p.user_id,
-        COALESCE(u.username, 'Usuario eliminado') AS username,
-        COALESCE(u.role, 'user')                 AS author_role,
-        COUNT(DISTINCT l.id)                     AS like_count,
-        MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked
-      FROM posts p
-      LEFT JOIN users u ON p.user_id = u.id
-      LEFT JOIN likes l ON p.id = l.post_id
-      WHERE p.user_id = ?
-      GROUP BY p.id
-      ORDER BY p.created_at DESC
+      WITH user_stats AS (
+          SELECT
+            u.id AS user_id,
+            u.manual_posts,
+            u.manual_likes,
+            COUNT(DISTINCT p_sub.id) AS raw_posts,
+            COUNT(l_sub.id)          AS raw_likes
+          FROM users u
+          LEFT JOIN posts p_sub ON u.id = p_sub.user_id
+          LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
+          GROUP BY u.id
+        )
+        SELECT
+          p.id,
+          p.title,
+          p.content,
+          p.category,
+          COALESCE(p.views, 0)                     AS views,
+          p.created_at,
+          p.user_id,
+          COALESCE(u.username, 'Usuario eliminado') AS username,
+          COALESCE(u.role, 'user')                 AS author_role,
+          COUNT(DISTINCT l.id)                     AS like_count,
+          COALESCE(s.manual_posts, s.raw_posts, 0) AS author_posts,
+          COALESCE(s.manual_likes, s.raw_likes, 0) AS author_likes,
+          MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked
+        FROM posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        LEFT JOIN likes l ON p.id = l.post_id
+        LEFT JOIN user_stats s ON p.user_id = s.user_id
+        WHERE p.user_id = ?
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
     `,
     args: [currentUserId, targetUserId],
   });
@@ -208,6 +223,8 @@ export async function getUserPublicProfile(username: string): Promise<PublicUser
     username: r.username as string,
     author_role: (r.author_role as string) ?? 'user',
     like_count: Number(r.like_count || 0),
+    author_posts: Number(r.author_posts || 0),
+    author_likes: Number(r.author_likes || 0),
     views: Number(r.views || 0),
     author_posts: totalPosts,
     author_likes: totalLikes,
