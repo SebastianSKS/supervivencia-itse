@@ -317,3 +317,30 @@ export async function publishPost(
   revalidatePath('/profile');
   redirect('/');
 }
+
+// ─── Editar Post (solo autor) ─────────────────────────────────────────────────
+export async function editPost(postId: number, newContent: string): Promise<{ success?: boolean; error?: string }> {
+  const session = await getSession();
+  if (!session) return { error: 'Debes iniciar sesión para editar.' };
+
+  const trimmedContent = newContent.trim();
+  if (trimmedContent.length < 20) {
+    return { error: 'El consejo debe tener al menos 20 caracteres.' };
+  }
+
+  try {
+    await db.execute({
+      sql: 'UPDATE posts SET content = ? WHERE id = ? AND user_id = ?',
+      args: [trimmedContent, postId, session.userId],
+    });
+    
+    revalidatePath('/');
+    revalidatePath('/wall');
+    revalidatePath('/profile');
+    
+    return { success: true };
+  } catch (err: unknown) {
+    console.error('[editPost] Error:', err instanceof Error ? err.message : err);
+    return { error: 'Error al guardar los cambios.' };
+  }
+}
