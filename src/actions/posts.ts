@@ -253,8 +253,8 @@ export async function getUserStats(userId: number): Promise<{
     const result = await db.execute({
       sql: `
         SELECT
-          COUNT(DISTINCT p.id) AS total_posts,
-          COUNT(DISTINCT l.id) AS total_likes,
+          COALESCE(u.manual_posts, COUNT(DISTINCT p.id)) AS total_posts,
+          COALESCE(u.manual_likes, COUNT(DISTINCT l.id)) AS total_likes,
           (SELECT COUNT(*) FROM follows WHERE following_id = ?) AS followers_count,
           (SELECT COUNT(*) FROM follows WHERE follower_id = ?)  AS following_count
         FROM users u
