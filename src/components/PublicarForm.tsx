@@ -1,37 +1,41 @@
 'use client';
 
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useTransition } from 'react';
 import { publishPost } from '@/actions/posts';
 import { AlertCircle, Loader2, Send } from 'lucide-react';
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex items-center gap-2 text-sm font-semibold bg-zinc-100 text-zinc-900 hover:bg-white px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {pending ? (
-        <><Loader2 className="w-4 h-4 animate-spin" />Publicando...</>
-      ) : (
-        <><Send className="w-4 h-4" />Publicar consejo</>
-      )}
-    </button>
-  );
-}
-
 export default function PublicarForm({ username }: { username: string }) {
-  const [state, action] = useActionState(publishPost, null);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [category, setCategory] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    formData.append('category', category);
+
+    startTransition(async () => {
+      const res = await publishPost(null, formData);
+      if (res?.error) {
+        setError(res.error);
+      }
+      // If success, publishPost redirects, so we don't need to clear state manually here.
+    });
+  };
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Error */}
-      {state?.error && (
+      {error && (
         <div className="flex items-center gap-2 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">
           <AlertCircle className="w-4 h-4 shrink-0" />
-          {state.error}
+          {error}
         </div>
       )}
 
@@ -45,6 +49,8 @@ export default function PublicarForm({ username }: { username: string }) {
           type="text"
           required
           maxLength={120}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Ej: Lo más importante del primer parcial..."
           className="w-full bg-zinc-800/50 border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-white/20 focus:bg-zinc-800 transition-all"
         />
@@ -61,6 +67,8 @@ export default function PublicarForm({ username }: { username: string }) {
           required
           rows={7}
           minLength={20}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
           placeholder={`Hola @${username}, cuéntales todo lo que ojalá alguien te hubiera dicho antes del primer semestre...`}
           className="w-full bg-zinc-800/50 border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-white/20 focus:bg-zinc-800 transition-all resize-none"
         />
@@ -74,6 +82,8 @@ export default function PublicarForm({ username }: { username: string }) {
         </label>
         <select
           name="category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
           className="w-full bg-zinc-800/50 border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-zinc-100 outline-none focus:border-white/20 focus:bg-zinc-800 transition-all appearance-none cursor-pointer"
         >
           <option value="">Sin categoría</option>
@@ -93,7 +103,17 @@ export default function PublicarForm({ username }: { username: string }) {
         >
           Cancelar
         </a>
-        <SubmitButton />
+        <button
+          type="submit"
+          disabled={isPending}
+          className="flex items-center gap-2 text-sm font-semibold bg-zinc-100 text-zinc-900 hover:bg-white px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPending ? (
+            <><Loader2 className="w-4 h-4 animate-spin" />Publicando...</>
+          ) : (
+            <><Send className="w-4 h-4" />Publicar consejo</>
+          )}
+        </button>
       </div>
     </form>
   );

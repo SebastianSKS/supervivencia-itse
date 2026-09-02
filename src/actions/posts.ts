@@ -275,10 +275,11 @@ export async function getUserStats(userId: number): Promise<{
 
 // ─── Validaciones comunes ─────────────────────────────────────────────────────
 function validatePost(title: string, content: string): string | null {
-  if (!title || !content)   return 'El título y el consejo son obligatorios.';
-  if (title.length   < 5)  return 'El título debe tener al menos 5 caracteres.';
-  if (title.length   > 120) return 'El título no puede superar 120 caracteres.';
-  if (content.length < 20) return 'El consejo debe tener al menos 20 caracteres.';
+  const t = title ? title.trim() : '';
+  const c = content ? content.trim() : '';
+  if (!t || !c) return 'El título y el consejo son obligatorios.';
+  if (t.length < 5 || t.length > 120) return 'El título debe tener entre 5 y 120 caracteres.';
+  if (c.length < 20) return 'El consejo debe tener al menos 20 caracteres.';
   return null;
 }
 
