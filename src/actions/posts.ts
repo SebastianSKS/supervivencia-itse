@@ -83,8 +83,8 @@ export async function getPosts(sort?: string, categoryFilter?: string): Promise<
             u.id AS user_id,
             u.manual_posts,
             u.manual_likes,
-            COUNT(DISTINCT p.id) AS raw_posts,
-            COUNT(l.id)          AS raw_likes
+            COUNT(DISTINCT p_sub.id) AS raw_posts,
+            COUNT(l_sub.id)          AS raw_likes
           FROM users u
           LEFT JOIN posts p_sub ON u.id = p_sub.user_id
           LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
@@ -135,8 +135,8 @@ export async function getPosts(sort?: string, categoryFilter?: string): Promise<
               u.id AS user_id,
               u.manual_posts,
             u.manual_likes,
-            COUNT(DISTINCT p.id) AS raw_posts,
-            COUNT(l.id)          AS raw_likes
+            COUNT(DISTINCT p_sub.id) AS raw_posts,
+            COUNT(l_sub.id)          AS raw_likes
             FROM users u
             LEFT JOIN posts p_sub ON u.id = p_sub.user_id
             LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
@@ -201,8 +201,8 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
             u.id AS user_id,
             u.manual_posts,
             u.manual_likes,
-            COUNT(DISTINCT p.id) AS raw_posts,
-            COUNT(l.id)          AS raw_likes
+            COUNT(DISTINCT p_sub.id) AS raw_posts,
+            COUNT(l_sub.id)          AS raw_likes
           FROM users u
           LEFT JOIN posts p_sub ON u.id = p_sub.user_id
           LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
@@ -279,7 +279,7 @@ export async function getUserStats(userId: number): Promise<{
   }
 }
 
-// ─── Validaciones comunes ─────────────────────────────────────────────────────
+// ─── Validaciones comunes ────────────────────────────────────────────────────────
 function validatePost(title: string, content: string): string | null {
   const t = title ? title.trim() : '';
   const c = content ? content.trim() : '';
