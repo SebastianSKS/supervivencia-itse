@@ -1,27 +1,20 @@
 import Navbar from '@/components/Navbar';
-import PostCard from '@/components/PostCard';
-import PostSortSelector from '@/components/PostSortSelector';
-import CategoryFilter from '@/components/CategoryFilter';
+import Feed from '@/components/Feed';
 import { getSession } from '@/lib/auth';
 import { getPosts } from '@/actions/posts';
-import { ArrowDown, LayoutGrid, PenSquare, AlertTriangle } from 'lucide-react';
+import { ArrowDown, LayoutGrid } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-interface Props {
-  searchParams: Promise<{ sort?: string; category?: string }>;
-}
-
-export default async function HomePage({ searchParams }: Props) {
-  const { sort, category } = await searchParams;
-
+export default async function HomePage() {
   let session = null;
   let posts: Awaited<ReturnType<typeof getPosts>> = [];
   let loadError: string | null = null;
 
   try {
-    [session, posts] = await Promise.all([getSession(), getPosts(sort, category)]);
+    // Obtenemos todos los posts. Feed.tsx se encarga de filtrar y ordenar en el cliente.
+    [session, posts] = await Promise.all([getSession(), getPosts()]);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[HomePage] Error al cargar datos:', msg);
@@ -70,68 +63,12 @@ export default async function HomePage({ searchParams }: Props) {
       </section>
 
       {/* ── El Muro ───────────────────────────────────────────────────────────── */}
-      <section id="muro" className="max-w-4xl mx-auto px-4 pt-2 pb-12 sm:pb-16">
-        {/* Encabezado + Selector + botón publicar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <LayoutGrid className="w-5 h-5 text-zinc-500 shrink-0" />
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">El Muro</h2>
-            </div>
-            <p className="text-zinc-500 text-xs sm:text-sm pl-7">
-              {posts.length} {posts.length === 1 ? 'consejo publicado' : 'consejos publicados'}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <PostSortSelector />
-
-            {session ? (
-              <Link
-                href="/publicar"
-                className="inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold bg-zinc-100 text-zinc-900 hover:bg-white px-4 py-2.5 rounded-xl transition-colors shadow-sm shrink-0"
-              >
-                <PenSquare className="w-4 h-4" />
-                + Nuevo consejo
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 text-xs sm:text-sm text-zinc-400 hover:text-zinc-200 border border-white/10 hover:border-white/20 bg-zinc-900/40 px-4 py-2.5 rounded-xl transition-all shrink-0"
-              >
-                Inicia sesión para publicar
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Filtro de Categorías */}
-        <CategoryFilter />
-
-        {/* Posts */}
-        {loadError ? (
-          <div className="flex flex-col items-center justify-center py-16 border border-red-500/10 bg-red-500/5 rounded-2xl px-4 text-center">
-            <AlertTriangle className="w-8 h-8 text-red-400/60 mb-3" />
-            <p className="text-zinc-400 font-medium text-sm">Hubo un problema al cargar el muro</p>
-            <p className="text-zinc-600 text-xs mt-1 font-mono break-all max-w-md">{loadError}</p>
-            <p className="text-zinc-600 text-xs mt-3">Intenta recargar la página.</p>
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 sm:py-24 border border-dashed border-white/[0.06] rounded-2xl w-full px-4 text-center">
-            <LayoutGrid className="w-10 h-10 text-zinc-800 mb-3" />
-            <p className="text-zinc-500 font-medium text-sm">No se encontraron consejos</p>
-            <p className="text-zinc-600 text-xs mt-1">
-              {session ? '¡Sé el primero en dejar un consejo!' : 'Inicia sesión para publicar el primer consejo.'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-            {posts.map(post => (
-              <PostCard key={post.id} post={post} currentUserId={session?.userId ?? null} />
-            ))}
-          </div>
-        )}
-      </section>
+      <Feed 
+        initialPosts={posts} 
+        currentUserId={session?.userId ?? null} 
+        hasSession={!!session} 
+        loadError={loadError} 
+      />
 
       {/* Footer */}
       <footer className="border-t border-white/[0.04] mt-4">

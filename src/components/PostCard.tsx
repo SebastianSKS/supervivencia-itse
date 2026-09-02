@@ -17,10 +17,10 @@ interface Props {
   currentUserId?: number | null;
 }
 
-function AuthorBadge({ role, likes, posts }: { role: string; likes: number; posts: number }) {
+function AuthorBadge({ role, totalLikes, totalPosts }: { role: string; totalLikes: number; totalPosts: number }) {
   if (role === 'admin') return <BadgeCheck className="w-4 h-4 text-blue-500" />;
-  if (likes >= 10) return <Star className="w-4 h-4 text-yellow-500" />;
-  if (posts >= 3) return <Shield className="w-4 h-4 text-purple-500" />;
+  if (totalLikes >= 10) return <Star className="w-4 h-4 text-yellow-500" />;
+  if (totalPosts >= 3) return <Shield className="w-4 h-4 text-purple-500" />;
   return null;
 }
 
@@ -63,7 +63,7 @@ export default function PostCard({ post, currentUserId = null }: Props) {
                 @{post.username}
               </Link>
               
-              <AuthorBadge role={post.author_role} likes={post.author_likes} posts={post.author_posts} />
+              <AuthorBadge role={post.author_role} totalLikes={post.author_likes} totalPosts={post.author_posts} />
 
               {/* Botón Seguir Inline */}
               {!isAuthor && (
