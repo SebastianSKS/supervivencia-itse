@@ -98,8 +98,23 @@ export default function CreatePostForm({ session }: Props) {
           placeholder="Cuéntales todo lo que ojalá alguien te hubiera dicho antes del primer semestre..."
           className="w-full bg-zinc-800/50 border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-white/20 focus:bg-zinc-800 transition-all resize-none"
         />
-        <div className="flex justify-end">
-          <SubmitButton />
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-between pt-1">
+          <select
+            name="category"
+            className="w-full sm:w-auto flex-1 bg-zinc-800/50 border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-400 outline-none focus:border-white/20 focus:text-zinc-200 transition-all appearance-none cursor-pointer"
+          >
+            <option value="">Categoría (Opcional)</option>
+            <option value="Trámites">Trámites</option>
+            <option value="Profesores">Profesores</option>
+            <option value="Cafetería">Cafetería</option>
+            <option value="Residencias">Residencias</option>
+            <option value="Exámenes">Exámenes</option>
+          </select>
+
+          <div className="w-full sm:w-auto flex justify-end">
+            <SubmitButton />
+          </div>
         </div>
       </form>
     </div>

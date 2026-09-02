@@ -67,6 +67,24 @@ export default function PublicarForm({ username }: { username: string }) {
         <span className="text-xs text-zinc-700">Mínimo 20 caracteres</span>
       </div>
 
+      {/* Categoría (Opcional) */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+          ¿Deseas añadir una categoría? (Opcional)
+        </label>
+        <select
+          name="category"
+          className="w-full bg-zinc-800/50 border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-zinc-100 outline-none focus:border-white/20 focus:bg-zinc-800 transition-all appearance-none cursor-pointer"
+        >
+          <option value="">Sin categoría</option>
+          <option value="Trámites">Trámites</option>
+          <option value="Profesores">Profesores</option>
+          <option value="Cafetería">Cafetería</option>
+          <option value="Residencias">Residencias</option>
+          <option value="Exámenes">Exámenes</option>
+        </select>
+      </div>
+
       {/* Acciones */}
       <div className="flex items-center justify-end gap-3 pt-1">
         <a

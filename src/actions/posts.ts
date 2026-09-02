@@ -11,6 +11,7 @@ export type Post = {
   id: number;
   title: string;
   content: string;
+  category: string | null;
   created_at: string;
   user_id: number;
   username: string;
@@ -19,6 +20,7 @@ export type Post = {
   author_posts: number;
   author_likes: number;
   author_rank: UserRank;
+  author_role: string;
   has_liked: boolean;
   has_favorited?: boolean;
   is_following_author?: boolean;
@@ -36,6 +38,7 @@ function rowToPost(row: any): Post {
     id:                  Number(row.id),
     title:               (row.title        as string) ?? '',
     content:             (row.content      as string) ?? '',
+    category:            (row.category     as string) ?? null,
     created_at:          (row.created_at   as string) ?? '',
     user_id:             Number(row.user_id ?? 0),
     username:            (row.username     as string) ?? 'Usuario eliminado',
@@ -44,6 +47,7 @@ function rowToPost(row: any): Post {
     author_posts:        authorPosts,
     author_likes:        authorLikes,
     author_rank:         getUserRank(authorPosts, authorLikes),
+    author_role:         (row.author_role  as string) ?? 'user',
     has_liked:           Number(row.has_liked) === 1,
     has_favorited:       Number(row.has_favorited ?? 0) === 1,
     is_following_author: Number(row.is_following_author) === 1,
@@ -55,7 +59,7 @@ export type PostSortOption = 'random' | 'newest' | 'oldest' | 'popular';
 // ─── Todos los posts (El Muro con Algoritmo Aleatorio / Dinámico) ─────────────
 // BLINDADO con try/catch: si falla la BD (tabla faltante, columna, etc.)
 // devuelve [] en vez de lanzar un 500.
-export async function getPosts(sort?: string): Promise<Post[]> {
+export async function getPosts(sort?: string, categoryFilter?: string): Promise<Post[]> {
   const session = await getSession();
   const currentUserId = session?.userId ?? -1;
 
@@ -65,6 +69,10 @@ export async function getPosts(sort?: string): Promise<Post[]> {
   else if (sort === 'oldest')  orderByClause = 'ORDER BY p.created_at ASC';
   else if (sort === 'popular') orderByClause = 'ORDER BY like_count DESC, p.created_at DESC';
   else if (sort === 'random')  orderByClause = 'ORDER BY RANDOM()';
+
+  const whereClause = categoryFilter ? 'WHERE p.category = ?' : '';
+  const primaryArgs: any[] = [currentUserId, currentUserId, currentUserId, currentUserId, currentUserId];
+  if (categoryFilter) primaryArgs.push(categoryFilter);
 
   // ── Intentar con favorites JOIN (requiere tabla favorites) ──────────────────
   try {
@@ -84,10 +92,12 @@ export async function getPosts(sort?: string): Promise<Post[]> {
           p.id,
           p.title,
           p.content,
+          p.category,
           COALESCE(p.views, 0)                     AS views,
           p.created_at,
           p.user_id,
           COALESCE(u.username, 'Usuario eliminado') AS username,
+          COALESCE(u.role, 'user')                 AS author_role,
           COUNT(DISTINCT l.id)                     AS like_count,
           COALESCE(s.total_posts, 0)               AS author_posts,
           COALESCE(s.total_likes, 0)               AS author_likes,
@@ -100,10 +110,11 @@ export async function getPosts(sort?: string): Promise<Post[]> {
         LEFT JOIN user_stats s   ON p.user_id = s.user_id
         LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
         LEFT JOIN favorites fav  ON p.id = fav.post_id AND fav.user_id = ?
+        ${whereClause}
         GROUP BY p.id
         ${orderByClause}
       `,
-      args: [currentUserId, currentUserId, currentUserId, currentUserId, currentUserId],
+      args: primaryArgs,
     });
     return result.rows.map(rowToPost);
   } catch (primaryErr: unknown) {
@@ -111,6 +122,9 @@ export async function getPosts(sort?: string): Promise<Post[]> {
     console.error('[getPosts] Error con favorites JOIN — intentando fallback sin favorites:', msg);
 
     // ── Fallback: query sin favorites (compatibilidad si la tabla no existe) ──
+    const fallbackArgs: any[] = [currentUserId, currentUserId, currentUserId];
+    if (categoryFilter) fallbackArgs.push(categoryFilter);
+
     try {
       const result = await db.execute({
         sql: `
@@ -128,10 +142,12 @@ export async function getPosts(sort?: string): Promise<Post[]> {
             p.id,
             p.title,
             p.content,
+            p.category,
             COALESCE(p.views, 0)                     AS views,
             p.created_at,
             p.user_id,
             COALESCE(u.username, 'Usuario eliminado') AS username,
+            COALESCE(u.role, 'user')                 AS author_role,
             COUNT(DISTINCT l.id)                     AS like_count,
             COALESCE(s.total_posts, 0)               AS author_posts,
             COALESCE(s.total_likes, 0)               AS author_likes,
@@ -143,17 +159,18 @@ export async function getPosts(sort?: string): Promise<Post[]> {
           LEFT JOIN likes l        ON p.id = l.post_id
           LEFT JOIN user_stats s   ON p.user_id = s.user_id
           LEFT JOIN follows f      ON p.user_id = f.following_id AND f.follower_id = ?
+          ${whereClause}
           GROUP BY p.id
           ${orderByClause}
         `,
-        args: [currentUserId, currentUserId, currentUserId],
+        args: fallbackArgs,
       });
       console.warn('[getPosts] Fallback OK — la tabla favorites no existe aún en esta BD.');
       return result.rows.map(rowToPost);
     } catch (fallbackErr: unknown) {
       const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
       console.error('[getPosts] Fallback también falló:', fallbackMsg);
-      return []; // Nunca lanzar — devolver array vacío para no romper la página
+      return [];
     }
   }
 }
@@ -189,10 +206,12 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
           p.id,
           p.title,
           p.content,
+          p.category,
           COALESCE(p.views, 0)                     AS views,
           p.created_at,
           p.user_id,
           COALESCE(u.username, 'Usuario eliminado') AS username,
+          COALESCE(u.role, 'user')                 AS author_role,
           COUNT(DISTINCT l.id)                     AS like_count,
           COALESCE(s.total_posts, 0)               AS author_posts,
           COALESCE(s.total_likes, 0)               AS author_likes,
@@ -271,15 +290,16 @@ export async function createPost(
   const session = await getSession();
   if (!session) return { error: 'Debes iniciar sesión para publicar.' };
 
-  const title   = (formData.get('title')   as string)?.trim();
-  const content = (formData.get('content') as string)?.trim();
+  const title    = (formData.get('title')    as string)?.trim();
+  const content  = (formData.get('content')  as string)?.trim();
+  const category = (formData.get('category') as string)?.trim() || null;
   const err = validatePost(title, content);
   if (err) return { error: err };
 
   try {
     await db.execute({
-      sql:  'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
-      args: [session.userId, title, content],
+      sql:  'INSERT INTO posts (user_id, title, content, category) VALUES (?, ?, ?, ?)',
+      args: [session.userId, title, content, category],
     });
   } catch {
     return { error: 'Error al publicar. Intenta de nuevo.' };
@@ -298,15 +318,16 @@ export async function publishPost(
   const session = await getSession();
   if (!session) return { error: 'Debes iniciar sesión para publicar.' };
 
-  const title   = (formData.get('title')   as string)?.trim();
-  const content = (formData.get('content') as string)?.trim();
+  const title    = (formData.get('title')    as string)?.trim();
+  const content  = (formData.get('content')  as string)?.trim();
+  const category = (formData.get('category') as string)?.trim() || null;
   const err = validatePost(title, content);
   if (err) return { error: err };
 
   try {
     await db.execute({
-      sql:  'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
-      args: [session.userId, title, content],
+      sql:  'INSERT INTO posts (user_id, title, content, category) VALUES (?, ?, ?, ?)',
+      args: [session.userId, title, content, category],
     });
   } catch {
     return { error: 'Error al publicar. Intenta de nuevo.' };

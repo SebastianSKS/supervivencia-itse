@@ -4,15 +4,21 @@ import { useState, useTransition } from 'react';
 import { formatDate } from '@/lib/utils';
 import { deleteMyPost } from '@/actions/user';
 import LikeButton from './LikeButton';
-import RankBadge from './RankBadge';
 import ViewTracker from './ViewTracker';
 import UserAvatar from './UserAvatar';
-import { Trash2, Pencil, Loader2 } from 'lucide-react';
+import { Trash2, Pencil, Loader2, BadgeCheck, Star, Shield } from 'lucide-react';
 import { editPost, type Post } from '@/actions/posts';
 
 interface Props {
   post: Post;
   currentUserId?: number | null;
+}
+
+function AuthorBadge({ role, likes, posts }: { role: string; likes: number; posts: number }) {
+  if (role === 'admin') return <BadgeCheck className="w-4 h-4 text-blue-500" />;
+  if (likes >= 10) return <Star className="w-4 h-4 text-yellow-500" />;
+  if (posts >= 3) return <Shield className="w-4 h-4 text-purple-500" />;
+  return null;
 }
 
 /**
@@ -49,9 +55,17 @@ export default function MyPostCard({ post, currentUserId = null }: Props) {
           <div className="leading-none">
             <div className="flex items-center gap-2">
               <p className="text-zinc-200 text-sm font-medium">@{post.username}</p>
-              <RankBadge rank={post.author_rank} size="sm" />
+              <AuthorBadge role={post.author_role} likes={post.author_likes} posts={post.author_posts} />
             </div>
-            <p className="text-zinc-600 text-xs mt-1">{formatDate(post.created_at)}</p>
+            <div className="flex items-center gap-1.5 mt-1 text-zinc-600 text-xs">
+              <span>{formatDate(post.created_at)}</span>
+              {post.category && (
+                <>
+                  <span>•</span>
+                  <span className="text-zinc-500 font-medium">{post.category}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

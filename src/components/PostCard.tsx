@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react';
 import { formatDate } from '@/lib/utils';
 import LikeButton from './LikeButton';
-import RankBadge from './RankBadge';
 import ReportButton from './ReportButton';
 import FollowButton from './FollowButton';
 import ViewTracker from './ViewTracker';
@@ -11,11 +10,18 @@ import BookmarkButton from './BookmarkButton';
 import UserAvatar from './UserAvatar';
 import { editPost, type Post } from '@/actions/posts';
 import Link from 'next/link';
-import { Pencil, Loader2 } from 'lucide-react';
+import { Pencil, Loader2, BadgeCheck, Star, Shield } from 'lucide-react';
 
 interface Props {
   post: Post;
   currentUserId?: number | null;
+}
+
+function AuthorBadge({ role, likes, posts }: { role: string; likes: number; posts: number }) {
+  if (role === 'admin') return <BadgeCheck className="w-4 h-4 text-blue-500" />;
+  if (likes >= 10) return <Star className="w-4 h-4 text-yellow-500" />;
+  if (posts >= 3) return <Shield className="w-4 h-4 text-purple-500" />;
+  return null;
 }
 
 export default function PostCard({ post, currentUserId = null }: Props) {
@@ -56,7 +62,8 @@ export default function PostCard({ post, currentUserId = null }: Props) {
               >
                 @{post.username}
               </Link>
-              <RankBadge rank={post.author_rank} size="sm" />
+              
+              <AuthorBadge role={post.author_role} likes={post.author_likes} posts={post.author_posts} />
 
               {/* Botón Seguir Inline */}
               {!isAuthor && (
@@ -68,7 +75,15 @@ export default function PostCard({ post, currentUserId = null }: Props) {
                 />
               )}
             </div>
-            <p className="text-zinc-600 text-xs mt-1">{formatDate(post.created_at)}</p>
+            <div className="flex items-center gap-1.5 mt-1 text-zinc-600 text-xs">
+              <span>{formatDate(post.created_at)}</span>
+              {post.category && (
+                <>
+                  <span>•</span>
+                  <span className="text-zinc-500 font-medium">{post.category}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

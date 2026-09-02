@@ -1,6 +1,7 @@
 import Navbar from '@/components/Navbar';
 import PostCard from '@/components/PostCard';
 import PostSortSelector from '@/components/PostSortSelector';
+import CategoryFilter from '@/components/CategoryFilter';
 import { getSession } from '@/lib/auth';
 import { getPosts } from '@/actions/posts';
 import { ArrowDown, LayoutGrid, PenSquare, AlertTriangle } from 'lucide-react';
@@ -9,18 +10,18 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<{ sort?: string; category?: string }>;
 }
 
 export default async function HomePage({ searchParams }: Props) {
-  const { sort } = await searchParams;
+  const { sort, category } = await searchParams;
 
   let session = null;
   let posts: Awaited<ReturnType<typeof getPosts>> = [];
   let loadError: string | null = null;
 
   try {
-    [session, posts] = await Promise.all([getSession(), getPosts(sort)]);
+    [session, posts] = await Promise.all([getSession(), getPosts(sort, category)]);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[HomePage] Error al cargar datos:', msg);
@@ -71,7 +72,7 @@ export default async function HomePage({ searchParams }: Props) {
       {/* ── El Muro ───────────────────────────────────────────────────────────── */}
       <section id="muro" className="max-w-4xl mx-auto px-4 pt-2 pb-12 sm:pb-16">
         {/* Encabezado + Selector + botón publicar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
               <LayoutGrid className="w-5 h-5 text-zinc-500 shrink-0" />
@@ -103,6 +104,9 @@ export default async function HomePage({ searchParams }: Props) {
             )}
           </div>
         </div>
+
+        {/* Filtro de Categorías */}
+        <CategoryFilter />
 
         {/* Posts */}
         {loadError ? (
