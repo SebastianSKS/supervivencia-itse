@@ -80,8 +80,10 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     WITH user_stats AS (
       SELECT
         u.id AS user_id,
-        COUNT(DISTINCT p.id) AS total_posts,
-        COUNT(l.id) AS total_likes
+        u.manual_posts,
+        u.manual_likes,
+        COUNT(DISTINCT p.id) AS raw_posts,
+        COUNT(l.id) AS raw_likes
       FROM users u
       LEFT JOIN posts p ON u.id = p.user_id
       LEFT JOIN likes l ON p.id = l.post_id
@@ -93,8 +95,8 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       u.email,
       u.role,
       u.created_at,
-      COALESCE(s.total_posts, 0) AS total_posts,
-      COALESCE(s.total_likes, 0) AS total_likes
+      COALESCE(s.manual_posts, s.raw_posts, 0) AS total_posts,
+      COALESCE(s.manual_likes, s.raw_likes, 0) AS total_likes
     FROM users u
     LEFT JOIN user_stats s ON u.id = s.user_id
     ORDER BY u.id DESC
@@ -229,6 +231,22 @@ export async function toggleUserRole(userId: number, currentRole: 'user' | 'admi
 
   revalidatePath('/admin');
   revalidatePath('/profile');
+}
+
+/**
+ * Sobrescribe las estadísticas manuales de un usuario (para admin)
+ */
+export async function updateUserStatsAdmin(userId: number, totalLikes: number, totalPosts: number): Promise<void> {
+  const session = await getSession();
+  if (!session || session.role !== 'admin') redirect('/');
+
+  await db.execute({
+    sql: 'UPDATE users SET manual_likes = ?, manual_posts = ? WHERE id = ?',
+    args: [totalLikes, totalPosts, userId],
+  });
+
+  revalidatePath('/admin');
+  revalidatePath('/');
 }
 
 /**

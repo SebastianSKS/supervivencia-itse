@@ -81,8 +81,10 @@ export async function getPosts(sort?: string, categoryFilter?: string): Promise<
         WITH user_stats AS (
           SELECT
             u.id AS user_id,
-            COUNT(DISTINCT p_sub.id) AS total_posts,
-            COUNT(l_sub.id)          AS total_likes
+            u.manual_posts,
+            u.manual_likes,
+            COUNT(DISTINCT p.id) AS raw_posts,
+            COUNT(l.id)          AS raw_likes
           FROM users u
           LEFT JOIN posts p_sub ON u.id = p_sub.user_id
           LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
@@ -99,8 +101,8 @@ export async function getPosts(sort?: string, categoryFilter?: string): Promise<
           COALESCE(u.username, 'Usuario eliminado') AS username,
           COALESCE(u.role, 'user')                 AS author_role,
           COUNT(DISTINCT l.id)                     AS like_count,
-          COALESCE(s.total_posts, 0)               AS author_posts,
-          COALESCE(s.total_likes, 0)               AS author_likes,
+          COALESCE(s.manual_posts, s.raw_posts, 0) AS author_posts,
+          COALESCE(s.manual_likes, s.raw_likes, 0) AS author_likes,
           MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
           MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author,
           MAX(CASE WHEN fav.user_id = ? THEN 1 ELSE 0 END) AS has_favorited
@@ -131,8 +133,10 @@ export async function getPosts(sort?: string, categoryFilter?: string): Promise<
           WITH user_stats AS (
             SELECT
               u.id AS user_id,
-              COUNT(DISTINCT p_sub.id) AS total_posts,
-              COUNT(l_sub.id)          AS total_likes
+              u.manual_posts,
+            u.manual_likes,
+            COUNT(DISTINCT p.id) AS raw_posts,
+            COUNT(l.id)          AS raw_likes
             FROM users u
             LEFT JOIN posts p_sub ON u.id = p_sub.user_id
             LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
@@ -149,8 +153,8 @@ export async function getPosts(sort?: string, categoryFilter?: string): Promise<
             COALESCE(u.username, 'Usuario eliminado') AS username,
             COALESCE(u.role, 'user')                 AS author_role,
             COUNT(DISTINCT l.id)                     AS like_count,
-            COALESCE(s.total_posts, 0)               AS author_posts,
-            COALESCE(s.total_likes, 0)               AS author_likes,
+            COALESCE(s.manual_posts, s.raw_posts, 0) AS author_posts,
+            COALESCE(s.manual_likes, s.raw_likes, 0) AS author_likes,
             MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
             MAX(CASE WHEN f.follower_id = ? THEN 1 ELSE 0 END) AS is_following_author,
             0 AS has_favorited
@@ -195,8 +199,10 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
         WITH user_stats AS (
           SELECT
             u.id AS user_id,
-            COUNT(DISTINCT p_sub.id) AS total_posts,
-            COUNT(l_sub.id)          AS total_likes
+            u.manual_posts,
+            u.manual_likes,
+            COUNT(DISTINCT p.id) AS raw_posts,
+            COUNT(l.id)          AS raw_likes
           FROM users u
           LEFT JOIN posts p_sub ON u.id = p_sub.user_id
           LEFT JOIN likes l_sub ON p_sub.id = l_sub.post_id
@@ -213,8 +219,8 @@ export async function getMyPosts(userId: number): Promise<Post[]> {
           COALESCE(u.username, 'Usuario eliminado') AS username,
           COALESCE(u.role, 'user')                 AS author_role,
           COUNT(DISTINCT l.id)                     AS like_count,
-          COALESCE(s.total_posts, 0)               AS author_posts,
-          COALESCE(s.total_likes, 0)               AS author_likes,
+          COALESCE(s.manual_posts, s.raw_posts, 0) AS author_posts,
+          COALESCE(s.manual_likes, s.raw_likes, 0) AS author_likes,
           MAX(CASE WHEN l.user_id = ? THEN 1 ELSE 0 END) AS has_liked,
           0 AS is_following_author,
           0 AS has_favorited

@@ -8,6 +8,7 @@ import {
   dismissSingleReport,
   toggleUserRole,
   deleteUser,
+  updateUserStatsAdmin,
 } from '@/actions/admin';
 import { logout } from '@/actions/auth';
 import RankBadge from '@/components/RankBadge';
@@ -31,6 +32,9 @@ import {
   MessageSquare,
   AlertTriangle,
   Eye,
+  Pencil,
+  X,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -43,8 +47,30 @@ type TabType = 'overview' | 'users' | 'reports' | 'posts';
 
 export default function AdminDashboardClient({ data, session }: Props) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+
+  // Buscadores (client-side)
   const [userSearch, setUserSearch] = useState('');
   const [postSearch, setPostSearch] = useState('');
+
+  // Edit User Stats Modal
+  const [editingUser, setEditingUser] = useState<typeof data.users[0] | null>(null);
+  const [editLikes, setEditLikes] = useState<number>(0);
+  const [editPosts, setEditPosts] = useState<number>(0);
+  const [isSavingStats, setIsSavingStats] = useState(false);
+
+  const handleEditUser = (user: typeof data.users[0]) => {
+    setEditingUser(user);
+    setEditLikes(user.totalLikes);
+    setEditPosts(user.totalPosts);
+  };
+
+  const handleSaveUserStats = async () => {
+    if (!editingUser) return;
+    setIsSavingStats(true);
+    await updateUserStatsAdmin(editingUser.id, editLikes, editPosts);
+    setIsSavingStats(false);
+    setEditingUser(null);
+  };
 
   const { stats, users, reports, posts } = data;
 
@@ -571,6 +597,13 @@ export default function AdminDashboardClient({ data, session }: Props) {
                             {formatDate(u.createdAt)}
                           </td>
                           <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => handleEditUser(u)}
+                              title="Editar estadísticas"
+                              className="inline-flex items-center justify-center p-1.5 rounded hover:bg-zinc-800 transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-4 h-4 text-zinc-400 hover:text-white" />
+                            </button>
                             {!isSelf && (
                               <>
                                 <form
@@ -814,6 +847,73 @@ export default function AdminDashboardClient({ data, session }: Props) {
           </div>
         )}
       </main>
+
+      {/* MODAL DE EDICIÓN DE ESTADÍSTICAS */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button
+              onClick={() => setEditingUser(null)}
+              className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-bold text-zinc-100 mb-1">
+              Editar Estadísticas
+            </h3>
+            <p className="text-xs text-zinc-400 mb-6">
+              Sobrescribe manualmente las métricas para @{editingUser.username}.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                  Total Likes
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editLikes}
+                  onChange={(e) => setEditLikes(Number(e.target.value))}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-700 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                  Total Posts
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editPosts}
+                  onChange={(e) => setEditPosts(Number(e.target.value))}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-700 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-8">
+              <button
+                onClick={() => setEditingUser(null)}
+                className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveUserStats}
+                disabled={isSavingStats}
+                className="flex items-center gap-2 bg-zinc-100 text-zinc-900 hover:bg-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {isSavingStats ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                ) : (
+                  'Guardar Cambios'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
